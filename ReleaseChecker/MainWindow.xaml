@@ -8,8 +8,8 @@
         Title="MainWindow" Height="450" Width="800">
     <Grid AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop">
         <StackPanel Margin="12">
-            <TextBlock Text="Drop one or more folders here" FontSize="16" Margin="0,0,0,8"/>
-            <ListBox x:Name="FoldersListBox" Height="300"/>
+            <TextBlock Text="Drop a folder here" FontSize="16" Margin="0,0,0,8"/>
+            <ListBox x:Name="FilesListBox" Height="360"/>
         </StackPanel>
     </Grid>
 </Window>

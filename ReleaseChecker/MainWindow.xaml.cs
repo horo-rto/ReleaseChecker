@@ -1,5 +1,7 @@
 ﻿using System.Text;
 using System.IO;
+using IOPath = System.IO.Path;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -47,14 +49,23 @@ namespace ReleaseChecker
             if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
 
             var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
-            foreach (var p in paths)
+            // Use only the last dropped folder (ignore others)
+            var lastDir = paths.Reverse().FirstOrDefault(p => Directory.Exists(p));
+            FilesListBox.Items.Clear();
+            if (lastDir != null)
             {
-                if (Directory.Exists(p))
+                try
                 {
-                    // avoid duplicates
-                    if (!FoldersListBox.Items.Contains(p))
-                        FoldersListBox.Items.Add(p);
-                    // Placeholder: integrate with existing logic to process folder `p`
+                    var files = Directory.GetFiles(lastDir, "*", SearchOption.AllDirectories);
+                    foreach (var file in files.OrderBy(f => f))
+                    {
+                        var rel = IOPath.GetRelativePath(lastDir, file);
+                        FilesListBox.Items.Add(rel);
+                    }
+                }
+                catch
+                {
+                    // ignore folders we can't access
                 }
             }
             e.Handled = true;
