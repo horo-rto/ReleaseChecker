@@ -4,6 +4,28 @@
              xmlns:local="clr-namespace:ReleaseChecker"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <!-- Dark theme resources -->
+        <Color x:Key="AppBackgroundColor">#FF0F0F10</Color>
+        <Color x:Key="SurfaceColor">#FF1E1E1E</Color>
+        <Color x:Key="AltSurfaceColor">#FF242424</Color>
+        <Color x:Key="AppForegroundColor">#FFDDDDDD</Color>
+        <Color x:Key="GridLineColor">#FF2E2E2E</Color>
+        <Color x:Key="SelectionColor">#FF264F7A</Color>
+        <Color x:Key="AccentColor">#FF3A7BD5</Color>
+
+        <SolidColorBrush x:Key="AppBackground" Color="{StaticResource AppBackgroundColor}"/>
+        <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}"/>
+        <SolidColorBrush x:Key="AltSurfaceBrush" Color="{StaticResource AltSurfaceColor}"/>
+        <SolidColorBrush x:Key="AppForeground" Color="{StaticResource AppForegroundColor}"/>
+        <SolidColorBrush x:Key="GridLineBrush" Color="{StaticResource GridLineColor}"/>
+        <SolidColorBrush x:Key="SelectionBrush" Color="{StaticResource SelectionColor}"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
+
+        <!-- DataGrid header style to match dark theme -->
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource AppForeground}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource GridLineBrush}"/>
+        </Style>
     </Application.Resources>
 </Application>

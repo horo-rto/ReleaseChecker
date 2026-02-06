@@ -5,11 +5,13 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:ReleaseChecker"
     mc:Ignorable="d"
-    Title="MainWindow" Height="700" Width="1000" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" MinWidth="900" MinHeight="600">
+    Title="MainWindow" Height="700" Width="1000" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" MinWidth="900" MinHeight="600"
+    Background="{DynamicResource AppBackground}" Foreground="{DynamicResource AppForeground}">
     <Window.Resources>
         <Style x:Key="CellTextStyle" TargetType="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="TextTrimming" Value="None"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppForeground}"/>
         </Style>
         <Style x:Key="CellPaddingStyle" TargetType="DataGridCell">
             <Setter Property="Padding" Value="1"/>
@@ -23,7 +25,14 @@
             </Grid.RowDefinitions>
 
             <TextBlock Text="Drop a folder here" FontSize="16" Margin="0,0,0,8" Grid.Row="0"/>
-            <DataGrid x:Name="FilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" Grid.Row="1" VerticalAlignment="Stretch" CellStyle="{StaticResource CellPaddingStyle}"/>
+            <DataGrid x:Name="FilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" Grid.Row="1" VerticalAlignment="Stretch" CellStyle="{StaticResource CellPaddingStyle}"
+                      Background="{DynamicResource SurfaceBrush}"
+                      Foreground="{DynamicResource AppForeground}"
+                      RowBackground="{DynamicResource SurfaceBrush}"
+                      AlternatingRowBackground="{DynamicResource AltSurfaceBrush}"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
+                      VerticalGridLinesBrush="{DynamicResource GridLineBrush}"/>
         </Grid>
     </Grid>
 </Window>
