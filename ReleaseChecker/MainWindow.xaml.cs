@@ -2,6 +2,8 @@
 using System.IO;
 using IOPath = System.IO.Path;
 using System.Linq;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -19,9 +21,16 @@ namespace ReleaseChecker
     /// </summary>
     public partial class MainWindow : Window
     {
+        private ObservableCollection<FileRow> _rows = new ObservableCollection<FileRow>();
         public MainWindow()
         {
             InitializeComponent();
+            FilesDataGrid.ItemsSource = _rows;
+
+            // initialize DataGrid with a File column; video/audio columns are added dynamically after analysis
+            FilesDataGrid.Columns.Clear();
+            var fileCol = new DataGridTextColumn { Header = "File", Binding = new System.Windows.Data.Binding("FileName"), Width = new DataGridLength(2, DataGridLengthUnitType.Star) };
+            FilesDataGrid.Columns.Add(fileCol);
         }
 
         private void Window_DragOver(object sender, DragEventArgs e)
@@ -51,16 +60,86 @@ namespace ReleaseChecker
             var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
             // Use only the last dropped folder (ignore others)
             var lastDir = paths.Reverse().FirstOrDefault(p => Directory.Exists(p));
-            FilesListBox.Items.Clear();
+            _rows.Clear();
             if (lastDir != null)
             {
                 try
                 {
-                    var files = Directory.GetFiles(lastDir, "*", SearchOption.AllDirectories);
-                    foreach (var file in files.OrderBy(f => f))
+                    var files = Directory.GetFiles(lastDir, "*", SearchOption.AllDirectories).OrderBy(f => f).ToList();
+
+                    // collect analysis results first
+                    var analyzed = new System.Collections.Generic.List<(string Rel, MediaFileInfo Mfi)>();
+                    foreach (var file in files)
                     {
                         var rel = IOPath.GetRelativePath(lastDir, file);
-                        FilesListBox.Items.Add(rel);
+                        MediaFileInfo mfi = null;
+                        try { mfi = MediaInfoReader.Analyze(file); } catch { mfi = null; }
+                        analyzed.Add((rel, mfi));
+                    }
+
+                    int maxVideo = analyzed.Max(a => a.Mfi?.VideoStreams?.Count ?? 0);
+                    int maxAudio = analyzed.Max(a => a.Mfi?.AudioStreams?.Count ?? 0);
+
+                    // rebuild DataGrid columns: keep File column first
+                    FilesDataGrid.Columns.Clear();
+                    FilesDataGrid.Columns.Add(new DataGridTextColumn { Header = "File", Binding = new System.Windows.Data.Binding("FileName"), Width = new DataGridLength(2, DataGridLengthUnitType.Star) });
+
+                    for (int i = 0; i < maxVideo; i++)
+                    {
+                        var key = $"Video {i + 1}";
+                        var col = new DataGridTextColumn { Header = key, Binding = new System.Windows.Data.Binding($"[{key}]"), Width = new DataGridLength(3, DataGridLengthUnitType.Star) };
+                        FilesDataGrid.Columns.Add(col);
+                    }
+
+                    for (int i = 0; i < maxAudio; i++)
+                    {
+                        var key = $"Audio {i + 1}";
+                        var col = new DataGridTextColumn { Header = key, Binding = new System.Windows.Data.Binding($"[{key}]"), Width = new DataGridLength(3, DataGridLengthUnitType.Star) };
+                        FilesDataGrid.Columns.Add(col);
+                    }
+
+                    // populate rows
+                    foreach (var entry in analyzed)
+                    {
+                        var fr = new FileRow();
+                        fr.FileName = entry.Rel;
+
+                        var mfi = entry.Mfi;
+                        for (int vi = 0; vi < maxVideo; vi++)
+                        {
+                            string value = string.Empty;
+                            if (mfi != null && mfi.VideoStreams.Count > vi)
+                            {
+                                var v = mfi.VideoStreams[vi];
+                                var parts = new[] {
+                                    v.Format,
+                                    string.IsNullOrWhiteSpace(v.Width) || string.IsNullOrWhiteSpace(v.Height) ? string.Empty : $"{v.Width}x{v.Height}",
+                                    v.FrameRate,
+                                    v.BitRate
+                                }.Where(s => !string.IsNullOrWhiteSpace(s));
+                                value = string.Join("; ", parts);
+                            }
+                            fr.Fields[$"Video {vi + 1}"] = value;
+                        }
+
+                        for (int ai = 0; ai < maxAudio; ai++)
+                        {
+                            string value = string.Empty;
+                            if (mfi != null && mfi.AudioStreams.Count > ai)
+                            {
+                                var a = mfi.AudioStreams[ai];
+                                var parts = new[] {
+                                    a.Format,
+                                    a.Channels,
+                                    a.SamplingRate,
+                                    a.BitRate
+                                }.Where(s => !string.IsNullOrWhiteSpace(s));
+                                value = string.Join("; ", parts);
+                            }
+                            fr.Fields[$"Audio {ai + 1}"] = value;
+                        }
+
+                        _rows.Add(fr);
                     }
                 }
                 catch
@@ -69,6 +148,20 @@ namespace ReleaseChecker
                 }
             }
             e.Handled = true;
+        }
+    }
+
+    public class FileRow
+    {
+        public string FileName { get; set; }
+        public Dictionary<string, string> Fields { get; } = new Dictionary<string, string>();
+        public string this[string key]
+        {
+            get
+            {
+                if (Fields.TryGetValue(key, out var v)) return v;
+                return string.Empty;
+            }
         }
     }
 }

@@ -8,4 +8,8 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MediaInfoDLL" Version="25.7.0" />
+  </ItemGroup>
+
 </Project>
