@@ -6,6 +6,15 @@
     xmlns:local="clr-namespace:ReleaseChecker"
     mc:Ignorable="d"
     Title="MainWindow" Height="700" Width="1000" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" MinWidth="900" MinHeight="600">
+    <Window.Resources>
+        <Style x:Key="CellTextStyle" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="TextTrimming" Value="None"/>
+        </Style>
+        <Style x:Key="CellPaddingStyle" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="1"/>
+        </Style>
+    </Window.Resources>
     <Grid AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop">
         <Grid Margin="12">
             <Grid.RowDefinitions>
@@ -14,7 +23,7 @@
             </Grid.RowDefinitions>
 
             <TextBlock Text="Drop a folder here" FontSize="16" Margin="0,0,0,8" Grid.Row="0"/>
-            <DataGrid x:Name="FilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" Grid.Row="1" VerticalAlignment="Stretch"/>
+            <DataGrid x:Name="FilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" Grid.Row="1" VerticalAlignment="Stretch" CellStyle="{StaticResource CellPaddingStyle}"/>
         </Grid>
     </Grid>
 </Window>
