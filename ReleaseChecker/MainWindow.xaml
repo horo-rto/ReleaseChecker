@@ -5,11 +5,16 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:ReleaseChecker"
     mc:Ignorable="d"
-    Title="MainWindow" Height="700" Width="1000">
+    Title="MainWindow" Height="700" Width="1000" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" MinWidth="900" MinHeight="600">
     <Grid AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop">
-        <StackPanel Margin="12">
-            <TextBlock Text="Drop a folder here" FontSize="16" Margin="0,0,0,8"/>
-            <DataGrid x:Name="FilesDataGrid" Height="560" AutoGenerateColumns="False" IsReadOnly="True"/>
-        </StackPanel>
+        <Grid Margin="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Drop a folder here" FontSize="16" Margin="0,0,0,8" Grid.Row="0"/>
+            <DataGrid x:Name="FilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" Grid.Row="1" VerticalAlignment="Stretch"/>
+        </Grid>
     </Grid>
 </Window>
