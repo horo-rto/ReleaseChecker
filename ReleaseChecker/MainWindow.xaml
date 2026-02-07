@@ -242,6 +242,28 @@
                       HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
                       VerticalGridLinesBrush="{DynamicResource GridLineBrush}">
 
+                <DataGrid.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.ContainerStyle>
+                            <Style TargetType="{x:Type GroupItem}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type GroupItem}">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" 
+                                                           Foreground="Gray" FontSize="22"
+                                                           Background="{DynamicResource AppBackground}"
+                                                           Padding="6,4"/>
+                                                <ItemsPresenter/>
+                                            </StackPanel>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </GroupStyle.ContainerStyle>
+                    </GroupStyle>
+                </DataGrid.GroupStyle>
+
                 <DataGrid.Columns/>
 
             </DataGrid>

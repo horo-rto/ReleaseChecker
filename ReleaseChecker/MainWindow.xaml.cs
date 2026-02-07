@@ -41,7 +41,10 @@ namespace ReleaseChecker
         {
             InitializeComponent();
             SourceInitialized += (_, _) => EnableDarkTitleBar(this);
-            FilesDataGrid.ItemsSource = _rows;
+
+            var view = CollectionViewSource.GetDefaultView(_rows);
+            view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(FileRow.FolderPath)));
+            FilesDataGrid.ItemsSource = view;
 
             this.MaxWidth = SystemParameters.WorkArea.Width;
             this.MaxHeight = SystemParameters.WorkArea.Height;
@@ -75,7 +78,10 @@ namespace ReleaseChecker
             var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
 
             var data = ReadData(paths);
-            Checker.CheckConsistency(data.Select(e => e.Mfi).ToList());
+
+            foreach (var group in data.GroupBy(e => e.Mfi.FolderPath))
+                Checker.CheckConsistency(group.Select(e => e.Mfi).ToList());
+
             UpdateUI(data);
 
             e.Handled = true;
@@ -127,6 +133,7 @@ namespace ReleaseChecker
                 var mfi = entry.Mfi;
 
                 fr.FileName = entry.Rel;
+                fr.FolderPath = entry.Mfi.FolderPath;
                 fr.Fields["FileName"] = entry.Rel;
                 fr.Fields["Video"] = mfi.VideoStream;
 
@@ -162,6 +169,7 @@ namespace ReleaseChecker
     public class FileRow
     {
         public string FileName { get; set; }
+        public string FolderPath { get; set; }
         public Dictionary<string, object> Fields { get; } = new Dictionary<string, object>();
         public object this[string key]
         {

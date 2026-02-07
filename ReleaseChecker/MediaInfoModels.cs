@@ -11,6 +11,7 @@ namespace ReleaseChecker
     {
         public string FilePath { get; set; }
         public string FileName => System.IO.Path.GetFileName(FilePath);
+        public string FolderPath => System.IO.Path.GetDirectoryName(FilePath);
         public long FileSizeBytes { get; set; }
 
         public VideoStreamInfo VideoStream;
@@ -191,7 +192,7 @@ namespace ReleaseChecker
         {
             CodecID = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "CodecID");
             Channels = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "Channel(s)");
-            ChannelPositions = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "ChannelPositions/String");
+            ChannelPositions = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "ChannelPositions");
             SamplingRate = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "SamplingRate/String");
             BitRate = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "BitRate/String");
             Duration = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "Duration/String3");
