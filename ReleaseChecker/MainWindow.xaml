@@ -73,6 +73,7 @@
 
     <Grid AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop">
             <DataGrid x:Name="FilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" VerticalAlignment="Stretch"
+                      HeadersVisibility="Column"
                       Background="{DynamicResource SurfaceBrush}"
                       Foreground="{DynamicResource AppForeground}"
                       RowBackground="{DynamicResource SurfaceBrush}"

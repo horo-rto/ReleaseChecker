@@ -5,12 +5,14 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
@@ -24,12 +26,23 @@ namespace ReleaseChecker
     /// </summary>
     public partial class MainWindow : Window
     {
+        [DllImport("dwmapi.dll", PreserveSig = true)]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
+        private static void EnableDarkTitleBar(Window window)
+        {
+            var hwnd = new WindowInteropHelper(window).Handle;
+            int value = 1;
+            DwmSetWindowAttribute(hwnd, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, ref value, sizeof(int));
+        }
+
         private ObservableCollection<FileRow> _rows = new ObservableCollection<FileRow>();
         Style cellTextStyle;
         Style cellPaddingStyle;
         public MainWindow()
         {
             InitializeComponent();
+            SourceInitialized += (_, _) => EnableDarkTitleBar(this);
             FilesDataGrid.ItemsSource = _rows;
 
             this.MaxWidth = SystemParameters.WorkArea.Width;
