@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,29 +25,18 @@ namespace ReleaseChecker
     public partial class MainWindow : Window
     {
         private ObservableCollection<FileRow> _rows = new ObservableCollection<FileRow>();
+        Style cellTextStyle;
+        Style cellPaddingStyle;
         public MainWindow()
         {
             InitializeComponent();
             FilesDataGrid.ItemsSource = _rows;
 
-            // cap window size to the screen work area so SizeToContent won't exceed the screen
             this.MaxWidth = SystemParameters.WorkArea.Width;
             this.MaxHeight = SystemParameters.WorkArea.Height;
 
-            // initialize DataGrid with a File column; video/audio columns are added dynamically after analysis
-            FilesDataGrid.Columns.Clear();
-            var textStyle = (Style)FindResource("CellTextStyle");
-            var cellStyle = (Style)FindResource("CellPaddingStyle");
-            var fileCol = new DataGridTextColumn
-            {
-                Header = "File",
-                Binding = new System.Windows.Data.Binding("FileName"),
-                ElementStyle = textStyle,
-                CellStyle = cellStyle,
-                Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells),
-                MinWidth = 200
-            };
-            FilesDataGrid.Columns.Add(fileCol);
+            cellPaddingStyle = (Style)FindResource("CellTextStyle");
+            cellPaddingStyle = (Style)FindResource("CellPaddingStyle");
         }
 
         private void Window_DragOver(object sender, DragEventArgs e)
@@ -102,43 +92,23 @@ namespace ReleaseChecker
             int maxVideo = analyzed.Max(a => a.Mfi?.VideoStreams?.Count ?? 0);
             int maxAudio = analyzed.Max(a => a.Mfi?.AudioStreams?.Count ?? 0);
 
-            // rebuild DataGrid columns: keep File column first
-            var cellTextStyle = (Style)FindResource("CellTextStyle");
-            var cellPaddingStyle = (Style)FindResource("CellPaddingStyle");
-            FilesDataGrid.Columns.Add(new DataGridTextColumn { Header = "File", Binding = new Binding("FileName"), Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells), MinWidth = 200, ElementStyle = cellTextStyle, CellStyle = cellPaddingStyle });
+            AddColumn("FileName");
 
             for (int i = 0; i < maxVideo; i++)
             {
-                var key = $"Video {i + 1}";
-                var col = new DataGridTextColumn { 
-                    Header = key, 
-                    Binding = new Binding($"[{key}]"), 
-                    Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells), 
-                    MinWidth = 120, 
-                    ElementStyle = cellTextStyle, 
-                    CellStyle = cellPaddingStyle
-                };
-                FilesDataGrid.Columns.Add(col);
+                AddColumn($"Video {i + 1}");
             }
 
             for (int i = 0; i < maxAudio; i++)
             {
-                var key = $"Audio {i + 1}";
-                var col = new DataGridTextColumn { 
-                    Header = key, 
-                    Binding = new Binding($"[{key}]"), 
-                    Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells), 
-                    MinWidth = 120, 
-                    ElementStyle = cellTextStyle, 
-                    CellStyle = cellPaddingStyle 
-                };
-                FilesDataGrid.Columns.Add(col);
+                AddColumn($"Audio {i + 1}");
             }
 
             foreach (var entry in analyzed)
             {
                 var fr = new FileRow();
                 fr.FileName = entry.Rel;
+                fr.Fields["FileName"] = entry.Rel;
 
                 var mfi = entry.Mfi;
                 for (int vi = 0; vi < maxVideo; vi++)
@@ -155,6 +125,19 @@ namespace ReleaseChecker
 
                 _rows.Add(fr);
             }
+        }
+
+        private void AddColumn(string binding)
+        {
+            var col = new DataGridTextColumn
+            {
+                Header = binding,
+                Binding = new Binding($"[{binding}]"),
+                Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells),
+                ElementStyle = cellTextStyle,
+                CellStyle = cellPaddingStyle
+            };
+            FilesDataGrid.Columns.Add(col);
         }
     }
 
