@@ -13,7 +13,8 @@ namespace ReleaseChecker
             if (files == null || files.Count < 2) return;
 
             // Video consistency
-            var videos = files.Where(f => f.VideoStream != null).Select(f => f.VideoStream).ToList();
+            var videos = files.Where(f => f.VideoStream != null).Select(f => f.VideoStream!).ToList();
+
             if (videos.Count >= 2)
             {
                 MarkOutliers(videos, v => v.Format, (v, e) => v.FormatError = e);
@@ -37,6 +38,22 @@ namespace ReleaseChecker
                     MarkOutliers(audios, a => a.Format, (a, e) => a.FormatError = e);
                     MarkOutliers(audios, a => a.ChannelsToString, (a, e) => a.ChannelsError = e);
                     MarkBitrateOutliers(audios);
+                }
+            }
+
+            // Subtitle consistency per stream index
+            int maxSubs = files.Max(f => f.SubtitleStreams?.Count ?? 0);
+            for (int i = 0; i < maxSubs; i++)
+            {
+                int idx = i;
+                var subs = files
+                    .Where(f => f.SubtitleStreams != null && idx < f.SubtitleStreams.Count)
+                    .Select(f => f.SubtitleStreams[idx])
+                    .ToList();
+
+                if (subs.Count >= 2)
+                {
+                    MarkOutliers(subs, s => s.Format, (s, e) => s.FormatError = e);
                 }
             }
         }

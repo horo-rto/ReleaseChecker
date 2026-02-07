@@ -73,18 +73,26 @@ namespace ReleaseChecker
 
         private void Window_Drop(object sender, DragEventArgs e)
         {
-            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            try
+            {
+                if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
 
-            var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
+                var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
 
-            var data = ReadData(paths);
+                var data = ReadData(paths);
+                DumpJson(data);
 
-            foreach (var group in data.GroupBy(e => e.Mfi.FolderPath))
-                Checker.CheckConsistency(group.Select(e => e.Mfi).ToList());
+                foreach (var group in data.GroupBy(e => e.Mfi.FolderPath))
+                    Checker.CheckConsistency(group.Select(e => e.Mfi).ToList());
 
-            UpdateUI(data);
+                UpdateUI(data);
 
-            e.Handled = true;
+                e.Handled = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private List<(string Rel, MediaFileInfo Mfi)> ReadData(string[] paths)
@@ -114,12 +122,24 @@ namespace ReleaseChecker
             return analyzed;
         }
 
+        private void DumpJson(List<(string Rel, MediaFileInfo Mfi)> data)
+        {
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true,
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+            };
+            var json = System.Text.Json.JsonSerializer.Serialize(data.Select(d => d.Mfi), options);
+            File.WriteAllText("./ReleaseChecker_dump.json", json);
+        }
+
         private void UpdateUI(List<(string Rel, MediaFileInfo Mfi)> analyzed)
         {
             _rows.Clear();
             FilesDataGrid.Columns.Clear();
 
             int maxAudio = analyzed.Max(e => e.Mfi?.AudioStreams?.Count ?? 0);
+            int maxSubs = analyzed.Max(e => e.Mfi?.SubtitleStreams?.Count ?? 0);
 
             AddColumn("Path", "FileName");
             AddColumn("Video", "Video");
@@ -127,20 +147,31 @@ namespace ReleaseChecker
             for (int a = 0; a < maxAudio; a++)
                 AddColumn(maxAudio == 1 ? "Audio" : $"Audio {a + 1}", $"Audio{a}");
 
+            for (int s = 0; s < maxSubs; s++)
+                AddColumn(maxSubs == 1 ? "Sub" : $"Sub {s + 1}", $"Sub{s}");
+
             foreach (var entry in analyzed)
             {
-                var fr = new FileRow();
+                var fr = new FileRow()
+                {
+                    FileName = entry.Rel,
+                    FolderPath = entry.Mfi.FolderPath
+                };
                 var mfi = entry.Mfi;
 
-                fr.FileName = entry.Rel;
-                fr.FolderPath = entry.Mfi.FolderPath;
                 fr.Fields["FileName"] = entry.Rel;
-                fr.Fields["Video"] = mfi.VideoStream;
+                if (mfi.VideoStream != null) fr.Fields["Video"] = mfi.VideoStream;
 
                 for (int a = 0; a < maxAudio; a++)
                 {
                     if (mfi?.AudioStreams != null && a < mfi.AudioStreams.Count)
                         fr.Fields[$"Audio{a}"] = mfi.AudioStreams[a];
+                }
+
+                for (int s = 0; s < maxSubs; s++)
+                {
+                    if (mfi?.SubtitleStreams != null && s < mfi.SubtitleStreams.Count)
+                        fr.Fields[$"Sub{s}"] = mfi.SubtitleStreams[s];
                 }
 
                 _rows.Add(fr);
@@ -168,8 +199,8 @@ namespace ReleaseChecker
 
     public class FileRow
     {
-        public string FileName { get; set; }
-        public string FolderPath { get; set; }
+        public required string FileName { get; set; }
+        public required string FolderPath { get; set; }
         public Dictionary<string, object> Fields { get; } = new Dictionary<string, object>();
         public object this[string key]
         {

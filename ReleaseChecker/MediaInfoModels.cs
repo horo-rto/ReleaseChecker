@@ -11,10 +11,10 @@ namespace ReleaseChecker
     {
         public string FilePath { get; set; }
         public string FileName => System.IO.Path.GetFileName(FilePath);
-        public string FolderPath => System.IO.Path.GetDirectoryName(FilePath);
+        public string FolderPath => System.IO.Path.GetDirectoryName(FilePath) ?? String.Empty;
         public long FileSizeBytes { get; set; }
 
-        public VideoStreamInfo VideoStream;
+        public VideoStreamInfo? VideoStream;
         public List<AudioStreamInfo> AudioStreams { get; } = new List<AudioStreamInfo>();
         public List<SubtitleStreamInfo> SubtitleStreams { get; } = new List<SubtitleStreamInfo>();
 
@@ -25,31 +25,34 @@ namespace ReleaseChecker
             FilePath = filePath;
 
             var mi = new MediaInfo();
-            try
+
+            if (mi.Open(filePath) == 0)
             {
-                if (mi.Open(filePath) == 0) return;
-
-                FileSizeBytes = MediaInfoReader.SafeGetLong(mi, StreamKind.General, 0, "FileSize");
-
-                if (mi.Count_Get(StreamKind.Video) > 0)
-                {
-                    VideoStream = new VideoStreamInfo(mi, 0, this);
-                }
-
-                for (int i = 0; i < mi.Count_Get(StreamKind.Audio); i++)
-                {
-                    AudioStreams.Add(new AudioStreamInfo(mi, i, this));
-                }
-
-                for (int i = 0; i < mi.Count_Get(StreamKind.Text); i++)
-                {
-                    SubtitleStreams.Add(new SubtitleStreamInfo(mi, i, this));
-                }
+                mi.Close();
+                bool exists = System.IO.File.Exists(filePath);
+                long size = exists ? new System.IO.FileInfo(filePath).Length : -1;
+                string ver = mi.Option("Info_Version");
+                throw new Exception($"MediaInfo failed.\nPath: {filePath}\nExists: {exists}\nMI version: {ver}");
             }
-            finally
+
+            FileSizeBytes = MediaInfoReader.SafeGetLong(mi, StreamKind.General, 0, "FileSize");
+
+            if (mi.Count_Get(StreamKind.Video) > 0)
             {
-                try { mi.Close(); } catch { }
+                VideoStream = new VideoStreamInfo(mi, 0, this);
             }
+
+            for (int i = 0; i < mi.Count_Get(StreamKind.Audio); i++)
+            {
+                AudioStreams.Add(new AudioStreamInfo(mi, i, this));
+            }
+
+            for (int i = 0; i < mi.Count_Get(StreamKind.Text); i++)
+            {
+                SubtitleStreams.Add(new SubtitleStreamInfo(mi, i, this));
+            }
+
+            mi.Close();
 
             CheckLanguageOrder();
         }
@@ -241,8 +244,11 @@ namespace ReleaseChecker
 
     public class SubtitleStreamInfo : CoreStreamInfo
     {
+        public string LineCount { get; set; }
+
         public SubtitleStreamInfo(MediaInfo mi, int i, MediaFileInfo parent) : base(mi, i, StreamKind.Text, parent)
         {
+            LineCount = MediaInfoReader.SafeGet(mi, StreamKind.Text, i, "ElementCount");
         }
     }
 
