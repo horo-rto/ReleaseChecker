@@ -89,11 +89,9 @@ namespace ReleaseChecker
             _rows.Clear();
             FilesDataGrid.Columns.Clear();
 
-            int maxAudio = analyzed.Max(a => a.Mfi?.AudioStreams?.Count ?? 0);
-
             AddColumn("FileName");
-
-            for (int i = 0; i < maxAudio; i++) AddColumn($"Audio {i + 1}");
+            AddColumn("Video");
+            AddColumn("Audio");
 
             foreach (var entry in analyzed)
             {
@@ -102,20 +100,20 @@ namespace ReleaseChecker
 
                 fr.FileName = entry.Rel;
                 fr.Fields["FileName"] = entry.Rel;
-                fr.Fields[$"Video"] = mfi.VideoStreams[0].ToString;
 
-                for (int ai = 0; ai < maxAudio; ai++)
+                // first video stream summary or empty
+                if (mfi != null && mfi.VideoStreams != null && mfi.VideoStreams.Count > 0)
                 {
-                    if (mfi != null && mfi.AudioStreams.Count > ai)
-                    {
-                        var a = mfi.AudioStreams[ai];
-                        fr.Fields[$"Audio {ai + 1}"] = a.ToString;
-                    }
-                    else
-                    {
-                        fr.Fields[$"Audio {ai + 1}"] = string.Empty;
-                    }
+                    fr.Fields["Video"] = mfi.VideoStreams[0].ToString;
                 }
+                else fr.Fields["Video"] = string.Empty;
+
+                // first audio stream summary or empty
+                if (mfi != null && mfi.AudioStreams != null && mfi.AudioStreams.Count > 0)
+                {
+                    fr.Fields["Audio"] = mfi.AudioStreams[0].ToString;
+                }
+                else fr.Fields["Audio"] = string.Empty;
 
                 _rows.Add(fr);
             }
