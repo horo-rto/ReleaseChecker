@@ -53,6 +53,21 @@ namespace ReleaseChecker
             e.Handled = true;
         }
 
+        private void Window_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (Keyboard.Modifiers != ModifierKeys.Control) return;
+            FontSize = Math.Clamp(FontSize + (e.Delta > 0 ? 1 : -1), 8, 40);
+            Dispatcher.BeginInvoke(() =>
+            {
+                foreach (var col in FilesDataGrid.Columns)
+                {
+                    col.Width = 0;
+                    col.Width = DataGridLength.Auto;
+                }
+            }, System.Windows.Threading.DispatcherPriority.Render);
+            e.Handled = true;
+        }
+
         private void Window_Drop(object sender, DragEventArgs e)
         {
             if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
