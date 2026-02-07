@@ -110,9 +110,9 @@ namespace ReleaseChecker
                 fr.Fields["FileName"] = entry.Rel;
 
                 // first video stream summary or empty
-                if (mfi != null && mfi.VideoStreams != null && mfi.VideoStreams.Count > 0)
+                if (mfi != null && mfi.VideoStream != null)
                 {
-                    fr.Fields["Video"] = mfi.VideoStreams[0];
+                    fr.Fields["Video"] = mfi.VideoStream;
                 }
                 else fr.Fields["Video"] = string.Empty;
 

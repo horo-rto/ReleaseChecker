@@ -8,8 +8,6 @@
     Title="Drop folders or files here" Height="700" Width="1000" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" MinWidth="900" MinHeight="600"
     Background="{DynamicResource AppBackground}" Foreground="{DynamicResource AppForeground}">
     <Window.Resources>
-        <local:ForcedErrorBrushConverter x:Key="ForcedErrBrush"/>
-        <local:ForcedErrorWeightConverter x:Key="ForcedErrWeight"/>
         <Style x:Key="CellTextStyle" TargetType="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="TextTrimming" Value="None"/>
@@ -23,11 +21,42 @@
         <DataTemplate DataType="{x:Type local:VideoStreamInfo}">
             <StackPanel>
                 <WrapPanel>
-                    <TextBlock Text="{Binding DefaultToString}"/>
-                    <TextBlock Text="{Binding ForcedToString}"
-                               Foreground="{Binding ForcedError, Converter={StaticResource ForcedErrBrush}}"
-                               FontWeight="{Binding ForcedError, Converter={StaticResource ForcedErrWeight}}"/>
-                    <TextBlock Text="{Binding Percentage}"/>
+                    <TextBlock Text="{Binding DefaultToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DefaultError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding ForcedToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ForcedError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Percentage}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding PercentageError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                     <TextBlock Text="{Binding Language}" Margin="4,0,0,0"/>
                     <TextBlock Text="{Binding Title}" Margin="4,0,0,0"/>
                 </WrapPanel>
@@ -49,11 +78,42 @@
         <DataTemplate DataType="{x:Type local:AudioStreamInfo}">
             <StackPanel>
                 <WrapPanel>
-                    <TextBlock Text="{Binding DefaultToString}"/>
-                    <TextBlock Text="{Binding ForcedToString}"
-                               Foreground="{Binding ForcedError, Converter={StaticResource ForcedErrBrush}}"
-                               FontWeight="{Binding ForcedError, Converter={StaticResource ForcedErrWeight}}"/>
-                    <TextBlock Text="{Binding Percentage}"/>
+                    <TextBlock Text="{Binding DefaultToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DefaultError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding ForcedToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ForcedError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Percentage}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding PercentageError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                     <TextBlock Text="{Binding Language}" Margin="4,0,0,0"/>
                     <TextBlock Text="{Binding Title}" Margin="4,0,0,0"/>
                 </WrapPanel>

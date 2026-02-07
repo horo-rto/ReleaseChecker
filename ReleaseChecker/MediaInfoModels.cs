@@ -1,10 +1,5 @@
 using MediaInfoLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Windows.Controls.Primitives;
-using System.Windows.Media.Media3D;
 
 namespace ReleaseChecker
 {
@@ -18,7 +13,7 @@ namespace ReleaseChecker
         public string FileName => System.IO.Path.GetFileName(FilePath);
         public long FileSizeBytes { get; set; }
 
-        public List<VideoStreamInfo> VideoStreams { get; } = new List<VideoStreamInfo>();
+        public VideoStreamInfo VideoStream;
         public List<AudioStreamInfo> AudioStreams { get; } = new List<AudioStreamInfo>();
         public List<SubtitleStreamInfo> SubtitleStreams { get; } = new List<SubtitleStreamInfo>();
 
@@ -35,9 +30,9 @@ namespace ReleaseChecker
 
                 FileSizeBytes = MediaInfoReader.SafeGetLong(mi, StreamKind.General, 0, "FileSize");
 
-                for (int i = 0; i < mi.Count_Get(StreamKind.Video); i++)
+                if (mi.Count_Get(StreamKind.Video) > 0)
                 {
-                    VideoStreams.Add(new VideoStreamInfo(mi, i, this));
+                    VideoStream = new VideoStreamInfo(mi, 0, this);
                 }
 
                 for (int i = 0; i < mi.Count_Get(StreamKind.Audio); i++)
@@ -83,8 +78,11 @@ namespace ReleaseChecker
         }
 
         public string DefaultToString => Default ?? false ? "[x]" : "[ ]";
-        public string ForcedToString => Default ?? false ? "[x]" : "[ ]";
+        public string ForcedToString => Forced ?? false ? "[x]" : "[ ]";
         public string Percentage => ParentFile.FileSizeBytes > 0 ? $"[{(int)(StreamSizeBytes * 100L / ParentFile.FileSizeBytes)}%]" : "[xx%]";
+        public bool DefaultError => 
+            (Default == true && Index > 0) ||
+            (Default == false && Index == 0);
         public bool ForcedError => Forced == true;
         protected string NormalizeBitrate(string br)
         {
@@ -144,6 +142,7 @@ namespace ReleaseChecker
             }
         }
         public string BitRateToString => NormalizeBitrate(BitRate);
+        public bool PercentageError => ParentFile.FileSizeBytes > 0 ? ((StreamSizeBytes * 100L / ParentFile.FileSizeBytes) < 50) : false;
 
         public new string ToString 
         {
@@ -200,6 +199,7 @@ namespace ReleaseChecker
             }
         }
         public string BitRateToString => NormalizeBitrate(BitRate);
+        public bool PercentageError => (StreamSizeBytes / ParentFile.VideoStream.StreamSizeBytes) > 33;
 
         public new string ToString
         {
