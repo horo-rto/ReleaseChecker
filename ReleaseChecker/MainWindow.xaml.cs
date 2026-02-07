@@ -35,7 +35,7 @@ namespace ReleaseChecker
             this.MaxWidth = SystemParameters.WorkArea.Width;
             this.MaxHeight = SystemParameters.WorkArea.Height;
 
-            cellPaddingStyle = (Style)FindResource("CellTextStyle");
+            cellTextStyle = (Style)FindResource("CellTextStyle");
             cellPaddingStyle = (Style)FindResource("CellPaddingStyle");
         }
 
@@ -89,38 +89,32 @@ namespace ReleaseChecker
             _rows.Clear();
             FilesDataGrid.Columns.Clear();
 
-            int maxVideo = analyzed.Max(a => a.Mfi?.VideoStreams?.Count ?? 0);
             int maxAudio = analyzed.Max(a => a.Mfi?.AudioStreams?.Count ?? 0);
 
             AddColumn("FileName");
 
-            for (int i = 0; i < maxVideo; i++)
-            {
-                AddColumn($"Video {i + 1}");
-            }
-
-            for (int i = 0; i < maxAudio; i++)
-            {
-                AddColumn($"Audio {i + 1}");
-            }
+            for (int i = 0; i < maxAudio; i++) AddColumn($"Audio {i + 1}");
 
             foreach (var entry in analyzed)
             {
                 var fr = new FileRow();
+                var mfi = entry.Mfi;
+
                 fr.FileName = entry.Rel;
                 fr.Fields["FileName"] = entry.Rel;
-
-                var mfi = entry.Mfi;
-                for (int vi = 0; vi < maxVideo; vi++)
-                {
-                    var v = mfi.VideoStreams[vi];
-                    fr.Fields[$"Video {vi + 1}"] = v.ToString;
-                }
+                fr.Fields[$"Video"] = mfi.VideoStreams[0].ToString;
 
                 for (int ai = 0; ai < maxAudio; ai++)
                 {
-                    var a = mfi.AudioStreams[ai];
-                    fr.Fields[$"Audio {ai + 1}"] = a.ToString;
+                    if (mfi != null && mfi.AudioStreams.Count > ai)
+                    {
+                        var a = mfi.AudioStreams[ai];
+                        fr.Fields[$"Audio {ai + 1}"] = a.ToString;
+                    }
+                    else
+                    {
+                        fr.Fields[$"Audio {ai + 1}"] = string.Empty;
+                    }
                 }
 
                 _rows.Add(fr);
@@ -135,7 +129,8 @@ namespace ReleaseChecker
                 Binding = new Binding($"[{binding}]"),
                 Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells),
                 ElementStyle = cellTextStyle,
-                CellStyle = cellPaddingStyle
+                CellStyle = cellPaddingStyle,
+                MinWidth = binding == "FileName" ? 200 : 120
             };
             FilesDataGrid.Columns.Add(col);
         }

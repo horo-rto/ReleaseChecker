@@ -11,7 +11,6 @@
         <Style x:Key="CellTextStyle" TargetType="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="TextTrimming" Value="None"/>
-            <Setter Property="MinWidth" Value="120"/>
             <Setter Property="Foreground" Value="{DynamicResource AppForeground}"/>
         </Style>
         <Style x:Key="CellPaddingStyle" TargetType="DataGridCell">
