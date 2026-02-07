@@ -37,8 +37,6 @@ namespace ReleaseChecker
         }
 
         private ObservableCollection<FileRow> _rows = new ObservableCollection<FileRow>();
-        Style cellTextStyle;
-        Style cellPaddingStyle;
         public MainWindow()
         {
             InitializeComponent();
@@ -47,9 +45,6 @@ namespace ReleaseChecker
 
             this.MaxWidth = SystemParameters.WorkArea.Width;
             this.MaxHeight = SystemParameters.WorkArea.Height;
-
-            cellTextStyle = (Style)FindResource("CellTextStyle");
-            cellPaddingStyle = (Style)FindResource("CellPaddingStyle");
         }
 
         private void Window_DragOver(object sender, DragEventArgs e)
@@ -100,6 +95,15 @@ namespace ReleaseChecker
         private void UpdateUI(List<(string Rel, MediaFileInfo Mfi)> analyzed)
         {
             _rows.Clear();
+            FilesDataGrid.Columns.Clear();
+
+            int maxAudio = analyzed.Max(e => e.Mfi?.AudioStreams?.Count ?? 0);
+
+            AddColumn("Path", "FileName");
+            AddColumn("Video", "Video");
+
+            for (int a = 0; a < maxAudio; a++)
+                AddColumn(maxAudio == 1 ? "Audio" : $"Audio {a + 1}", $"Audio{a}");
 
             foreach (var entry in analyzed)
             {
@@ -108,23 +112,34 @@ namespace ReleaseChecker
 
                 fr.FileName = entry.Rel;
                 fr.Fields["FileName"] = entry.Rel;
+                fr.Fields["Video"] = mfi.VideoStream;
 
-                // first video stream summary or empty
-                if (mfi != null && mfi.VideoStream != null)
+                for (int a = 0; a < maxAudio; a++)
                 {
-                    fr.Fields["Video"] = mfi.VideoStream;
+                    if (mfi?.AudioStreams != null && a < mfi.AudioStreams.Count)
+                        fr.Fields[$"Audio{a}"] = mfi.AudioStreams[a];
                 }
-                else fr.Fields["Video"] = string.Empty;
-
-                // first audio stream summary or empty
-                if (mfi != null && mfi.AudioStreams != null && mfi.AudioStreams.Count > 0)
-                {
-                    fr.Fields["Audio"] = mfi.AudioStreams[0];
-                }
-                else fr.Fields["Audio"] = string.Empty;
 
                 _rows.Add(fr);
             }
+        }
+
+        private void AddColumn(string header, string key)
+        {
+            FilesDataGrid.Columns.Add(new DataGridTemplateColumn
+            {
+                Header = header,
+                CellTemplate = CreateCellTemplate(key)
+            });
+        }
+
+        private DataTemplate CreateCellTemplate(string key)
+        {
+            var template = new DataTemplate();
+            var factory = new FrameworkElementFactory(typeof(ContentPresenter));
+            factory.SetBinding(ContentPresenter.ContentProperty, new Binding($"[{key}]"));
+            template.VisualTree = factory;
+            return template;
         }
     }
 

@@ -5,18 +5,13 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:ReleaseChecker"
     mc:Ignorable="d"
-    Title="Drop folders or files here" Height="700" Width="1000" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" MinWidth="900" MinHeight="600"
-    Background="{DynamicResource AppBackground}" Foreground="{DynamicResource AppForeground}">
+    Title="Drop folders or files here" 
+    Height="700" Width="1000" MinWidth="900" MinHeight="600"
+    SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" 
+    Background="{DynamicResource AppBackground}" 
+    Foreground="{DynamicResource AppForeground}"
+    FontSize="16">
     <Window.Resources>
-        <Style x:Key="CellTextStyle" TargetType="TextBlock">
-            <Setter Property="TextWrapping" Value="Wrap"/>
-            <Setter Property="TextTrimming" Value="None"/>
-            <Setter Property="MinWidth" Value="120"/>
-            <Setter Property="Foreground" Value="{DynamicResource AppForeground}"/>
-        </Style>
-        <Style x:Key="CellPaddingStyle" TargetType="DataGridCell">
-            <Setter Property="Padding" Value="1"/>
-        </Style>
         <!-- Templates for Video/Audio objects -->
         <DataTemplate DataType="{x:Type local:VideoStreamInfo}">
             <StackPanel>
@@ -132,7 +127,8 @@
     </Window.Resources>
 
     <Grid AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop">
-            <DataGrid x:Name="FilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" VerticalAlignment="Stretch"
+            <DataGrid x:Name="FilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                      VerticalAlignment="Stretch"
                       HeadersVisibility="Column"
                       Background="{DynamicResource SurfaceBrush}"
                       Foreground="{DynamicResource AppForeground}"
@@ -142,23 +138,7 @@
                       HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
                       VerticalGridLinesBrush="{DynamicResource GridLineBrush}">
 
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Path" Binding="{Binding [FileName]}" ElementStyle="{StaticResource CellTextStyle}" CellStyle="{StaticResource CellPaddingStyle}" />
-                    <DataGridTemplateColumn Header="Video" MinWidth="300">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <ContentPresenter Content="{Binding [Video]}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="Audio" MinWidth="200">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <ContentPresenter Content="{Binding [Audio]}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
+                <DataGrid.Columns/>
 
             </DataGrid>
     </Grid>

@@ -69,7 +69,7 @@ namespace ReleaseChecker
             Index = i;
             StreamKind = kind;
             ParentFile = parent;
-            StreamSizeBytes = MediaInfoReader.SafeGetLong(mi, StreamKind.Video, i, "StreamSize");
+            StreamSizeBytes = MediaInfoReader.SafeGetLong(mi, kind, i, "StreamSize");
             Format = MediaInfoReader.SafeGet(mi, kind, i, "Format");
             Language = MediaInfoReader.SafeGet(mi, kind, i, "Language/String");
             Title = MediaInfoReader.SafeGet(mi, kind, i, "Title");
@@ -199,7 +199,7 @@ namespace ReleaseChecker
             }
         }
         public string BitRateToString => NormalizeBitrate(BitRate);
-        public bool PercentageError => (StreamSizeBytes / ParentFile.VideoStream.StreamSizeBytes) > 33;
+        public bool PercentageError => ParentFile.VideoStream?.StreamSizeBytes > 0 ? (StreamSizeBytes * 100L / ParentFile.VideoStream.StreamSizeBytes) > 33 : false;
 
         public new string ToString
         {
