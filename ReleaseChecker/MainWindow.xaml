@@ -67,18 +67,64 @@
                     </TextBlock>
                     <TextBlock Text="{Binding Title}" Margin="4,0,0,0"/>
                 </WrapPanel>
-                <TextBlock TextWrapping="Wrap" Foreground="Gray">
-                    <TextBlock.Text>
-                        <MultiBinding StringFormat="{}{0}@{1}bit; {2}x{3}; {4}; {5}">
-                            <Binding Path="Format"/>
-                            <Binding Path="BitDepth"/>
-                            <Binding Path="Width"/>
-                            <Binding Path="Height"/>
-                            <Binding Path="FrameRateToString"/>
-                            <Binding Path="BitRateToString"/>
-                        </MultiBinding>
-                    </TextBlock.Text>
-                </TextBlock>
+                <WrapPanel>
+                    <TextBlock Text="{Binding Format}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FormatError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding BitDepth, StringFormat=@{0}bit}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding BitDepthError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="; " Foreground="Gray"/>
+                    <TextBlock Text="{Binding Resolution}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ResolutionError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="; " Foreground="Gray"/>
+                    <TextBlock Text="{Binding FrameRateToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FrameRateError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="; " Foreground="Gray"/>
+                    <TextBlock Text="{Binding BitRateToString}" Foreground="Gray"/>
+                </WrapPanel>
             </StackPanel>
         </DataTemplate>
 
@@ -135,16 +181,51 @@
                     </TextBlock>
                     <TextBlock Text="{Binding Title}" Margin="4,0,0,0"/>
                 </WrapPanel>
-                <TextBlock TextWrapping="Wrap" Foreground="Gray">
-                    <TextBlock.Text>
-                        <MultiBinding StringFormat="{}{0}; {1}; {2}; {3}">
-                            <Binding Path="Format"/>
-                            <Binding Path="ChannelsToString"/>
-                            <Binding Path="SamplingRate"/>
-                            <Binding Path="BitRateToString"/>
-                        </MultiBinding>
-                    </TextBlock.Text>
-                </TextBlock>
+                <WrapPanel>
+                    <TextBlock Text="{Binding Format}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FormatError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="; " Foreground="Gray"/>
+                    <TextBlock Text="{Binding ChannelsToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ChannelsError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="; " Foreground="Gray"/>
+                    <TextBlock Text="{Binding SamplingRate}" Foreground="Gray"/>
+                    <TextBlock Text="; " Foreground="Gray"/>
+                    <TextBlock Text="{Binding BitRateToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding BitRateError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </WrapPanel>
             </StackPanel>
         </DataTemplate>
     </Window.Resources>

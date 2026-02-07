@@ -161,8 +161,12 @@ namespace ReleaseChecker
                 return s;
             }
         }
+        public string Resolution => $"{Width}x{Height}";
         public string BitRateToString => NormalizeBitrate(BitRate);
         public bool PercentageError => ParentFile.FileSizeBytes > 0 ? ((StreamSizeBytes * 100L / ParentFile.FileSizeBytes) < 50) : false;
+        public bool BitDepthError { get; set; }
+        public bool FrameRateError { get; set; }
+        public bool ResolutionError { get; set; }
 
         public new string ToString 
         {
@@ -220,6 +224,8 @@ namespace ReleaseChecker
         }
         public string BitRateToString => NormalizeBitrate(BitRate);
         public bool PercentageError => ParentFile.VideoStream?.StreamSizeBytes > 0 ? (StreamSizeBytes * 100L / ParentFile.VideoStream.StreamSizeBytes) > 33 : false;
+        public bool ChannelsError { get; set; }
+        public bool BitRateError { get; set; }
 
         public new string ToString
         {

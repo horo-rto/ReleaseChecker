@@ -75,6 +75,7 @@ namespace ReleaseChecker
             var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
 
             var data = ReadData(paths);
+            Checker.CheckConsistency(data.Select(e => e.Mfi).ToList());
             UpdateUI(data);
 
             e.Handled = true;
