@@ -87,11 +87,6 @@ namespace ReleaseChecker
         private void UpdateUI(List<(string Rel, MediaFileInfo Mfi)> analyzed)
         {
             _rows.Clear();
-            FilesDataGrid.Columns.Clear();
-
-            AddColumn("FileName");
-            AddColumn("Video");
-            AddColumn("Audio");
 
             foreach (var entry in analyzed)
             {
@@ -104,41 +99,27 @@ namespace ReleaseChecker
                 // first video stream summary or empty
                 if (mfi != null && mfi.VideoStreams != null && mfi.VideoStreams.Count > 0)
                 {
-                    fr.Fields["Video"] = mfi.VideoStreams[0].ToString;
+                    fr.Fields["Video"] = mfi.VideoStreams[0];
                 }
                 else fr.Fields["Video"] = string.Empty;
 
                 // first audio stream summary or empty
                 if (mfi != null && mfi.AudioStreams != null && mfi.AudioStreams.Count > 0)
                 {
-                    fr.Fields["Audio"] = mfi.AudioStreams[0].ToString;
+                    fr.Fields["Audio"] = mfi.AudioStreams[0];
                 }
                 else fr.Fields["Audio"] = string.Empty;
 
                 _rows.Add(fr);
             }
         }
-
-        private void AddColumn(string binding)
-        {
-            var col = new DataGridTextColumn
-            {
-                Header = binding,
-                Binding = new Binding($"[{binding}]"),
-                Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells),
-                ElementStyle = cellTextStyle,
-                CellStyle = cellPaddingStyle,
-                MinWidth = binding == "FileName" ? 200 : 120
-            };
-            FilesDataGrid.Columns.Add(col);
-        }
     }
 
     public class FileRow
     {
         public string FileName { get; set; }
-        public Dictionary<string, string> Fields { get; } = new Dictionary<string, string>();
-        public string this[string key]
+        public Dictionary<string, object> Fields { get; } = new Dictionary<string, object>();
+        public object this[string key]
         {
             get
             {

@@ -2,6 +2,7 @@ using MediaInfoLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media.Media3D;
 
@@ -67,6 +68,7 @@ namespace ReleaseChecker
         public string Title { get; set; }
         public bool? Default { get; set; }
         public bool? Forced { get; set; }
+
         public CoreStreamInfo(MediaInfo mi, int i, StreamKind kind, MediaFileInfo parent)
         {
             Index = i;
@@ -78,6 +80,23 @@ namespace ReleaseChecker
             Title = MediaInfoReader.SafeGet(mi, kind, i, "Title");
             Default = MediaInfoReader.SafeGetTag(mi, kind, i, "Default");
             Forced = MediaInfoReader.SafeGetTag(mi, kind, i, "Forced");
+        }
+
+        public string DefaultToString => Default ?? false ? "[x]" : "[ ]";
+        public string ForcedToString => Default ?? false ? "[x]" : "[ ]";
+        public string Percentage => ParentFile.FileSizeBytes > 0 ? $"[{(int)(StreamSizeBytes * 100L / ParentFile.FileSizeBytes)}%]" : "[xx%]";
+        public bool ForcedError => Forced == true;
+        protected string NormalizeBitrate(string br)
+        {
+            if (string.IsNullOrWhiteSpace(br)) return string.Empty;
+            var s = br.Trim();
+            s = s.Replace("Mb/s", "Mbps");
+            s = s.Replace("Mb/s", "Mbps");
+            s = s.Replace("kb/s", "kbps");
+            s = s.Replace("Kb/s", "kbps");
+            s = s.Replace("kbit/s", "kbps");
+            s = s.Replace("Mb/s", "Mbps");
+            return s;
         }
     }
 
@@ -106,12 +125,32 @@ namespace ReleaseChecker
                 MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "BitDepth");
         }
 
+        public string FrameRateToString
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(FrameRate)) return string.Empty;
+                var s = FrameRate.Trim();
+                var m = Regex.Match(s, "[0-9]+(?:\\.[0-9]+)?");
+                if (m.Success)
+                {
+                    if (double.TryParse(m.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var d))
+                    {
+                        var outStr = d.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+                        return outStr + " fps";
+                    }
+                }
+                return s;
+            }
+        }
+        public string BitRateToString => NormalizeBitrate(BitRate);
+
         public new string ToString 
         {
             get
             {
-                return StringFormatters.ComposeLine1(this) + 
-                    $"\n{Format}@{BitDepth}bit; {Width}x{Height}; {StringFormatters.NormalizeFrameRate(FrameRate)}; {StringFormatters.NormalizeBitrate(BitRate)}";
+                return $"{DefaultToString}{ForcedToString}{Percentage} {Language} {Title}" + 
+                    $"\n{Format}@{BitDepth}bit; {Width}x{Height}; {FrameRateToString}; {BitRateToString}";
             }
         }
     }
@@ -135,14 +174,42 @@ namespace ReleaseChecker
             Duration = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "Duration/String3");
         }
 
+        public string ChannelsToString
+        {
+            get
+            { 
+                if (string.IsNullOrWhiteSpace(Channels)) return string.Empty;
+
+                var s = Channels.ToLowerInvariant();
+
+                if (s.Contains("stereo")) return "2.0";
+                if (s.Contains("mono")) return "1.0";
+
+                if (string.IsNullOrWhiteSpace(ChannelPositions)) return Channels + ".0";
+
+                var cp = ChannelPositions.ToLowerInvariant();
+                bool hasLfe = cp.Contains("lfe") || cp.Contains("low frequency");
+
+                if (int.TryParse(Channels, out var n))
+                {
+                    if (hasLfe) return (n - 1) + ".1";
+                    else return n + ".0";
+                }
+
+                return Channels;
+            }
+        }
+        public string BitRateToString => NormalizeBitrate(BitRate);
+
         public new string ToString
         {
             get
             {
-                return StringFormatters.ComposeLine1(this) +
-                    $"\n{Format}; {StringFormatters.NormalizeChannels(Channels, ChannelPositions)}; {SamplingRate}; {StringFormatters.NormalizeBitrate(BitRate)}";
+                return $"{DefaultToString}{ForcedToString}{Percentage} {Language} {Title}" +
+                    $"\n{Format}; {ChannelsToString}; {SamplingRate}; {BitRateToString}";
             }
         }
+
     }
 
     public class SubtitleStreamInfo : CoreStreamInfo
@@ -198,7 +265,7 @@ namespace ReleaseChecker
                 if (string.IsNullOrWhiteSpace(value)) return false;
 
                 var v = value.Trim().ToLowerInvariant();
-                if (v == "yes" || v == "y" || v == "1" || v == "true" || v == "да") return true;
+                if (v == "yes" || v == "y" || v == "1" || v == "true" || v == "пїЅпїЅ") return true;
 
                 return false;
             }
