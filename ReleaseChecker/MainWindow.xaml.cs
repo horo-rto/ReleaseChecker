@@ -1,9 +1,10 @@
-﻿using System.Text;
-using System.IO;
-using IOPath = System.IO.Path;
-using System.Linq;
+﻿using MediaInfoLib;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -13,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using IOPath = System.IO.Path;
 
 namespace ReleaseChecker
 {
@@ -49,21 +51,7 @@ namespace ReleaseChecker
 
         private void Window_DragOver(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
-                // Accept if at least one path is a directory
-                bool hasDir = false;
-                foreach (var p in paths)
-                {
-                    if (Directory.Exists(p)) { hasDir = true; break; }
-                }
-                e.Effects = hasDir ? DragDropEffects.Copy : DragDropEffects.None;
-            }
-            else
-            {
-                e.Effects = DragDropEffects.None;
-            }
+            e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
             e.Handled = true;
         }
 
@@ -72,100 +60,101 @@ namespace ReleaseChecker
             if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
 
             var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
-            // Use only the last dropped folder (ignore others)
-            var lastDir = paths.Reverse().FirstOrDefault(p => Directory.Exists(p));
-            _rows.Clear();
-            if (lastDir != null)
-            {
-                try
-                {
-                    var files = Directory.GetFiles(lastDir, "*", SearchOption.AllDirectories).OrderBy(f => f).ToList();
 
-                    // collect analysis results first
-                    var analyzed = new System.Collections.Generic.List<(string Rel, MediaFileInfo Mfi)>();
+            var data = ReadData(paths);
+            UpdateUI(data);
+
+            e.Handled = true;
+        }
+
+        private List<(string Rel, MediaFileInfo Mfi)> ReadData(string[] paths)
+        {
+            var analyzed = new List<(string Rel, MediaFileInfo Mfi)>();
+
+            foreach (var path in paths)
+            {
+                if (File.Exists(path))
+                {
+                    var rel = IOPath.GetFileName(path);
+                    var mfi = new MediaFileInfo(path);
+                    analyzed.Add((rel, mfi));
+                }
+
+                if (Directory.Exists(path))
+                {
+                    var files = Directory.GetFiles(path, "*", SearchOption.AllDirectories).OrderBy(f => f);
                     foreach (var file in files)
                     {
-                        var rel = IOPath.GetRelativePath(lastDir, file);
-                        MediaFileInfo mfi = null;
-                        try { mfi = MediaInfoReader.Analyze(file); } catch { mfi = null; }
+                        var rel = IOPath.GetRelativePath(path, file);
+                        var mfi = new MediaFileInfo(file);
                         analyzed.Add((rel, mfi));
                     }
-
-                    int maxVideo = analyzed.Max(a => a.Mfi?.VideoStreams?.Count ?? 0);
-                    int maxAudio = analyzed.Max(a => a.Mfi?.AudioStreams?.Count ?? 0);
-
-                    // rebuild DataGrid columns: keep File column first
-                    FilesDataGrid.Columns.Clear();
-                    var cellTextStyle = (Style)FindResource("CellTextStyle");
-                    var cellPaddingStyle = (Style)FindResource("CellPaddingStyle");
-                    FilesDataGrid.Columns.Add(new DataGridTextColumn { Header = "File", Binding = new System.Windows.Data.Binding("FileName"), Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells), MinWidth = 200, ElementStyle = cellTextStyle, CellStyle = cellPaddingStyle });
-
-                    for (int i = 0; i < maxVideo; i++)
-                    {
-                        var key = $"Video {i + 1}";
-                        var col = new DataGridTextColumn { Header = key, Binding = new System.Windows.Data.Binding($"[{key}]"), Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells), MinWidth = 120, ElementStyle = cellTextStyle, CellStyle = cellPaddingStyle };
-                        FilesDataGrid.Columns.Add(col);
-                    }
-
-                    for (int i = 0; i < maxAudio; i++)
-                    {
-                        var key = $"Audio {i + 1}";
-                        var col = new DataGridTextColumn { Header = key, Binding = new System.Windows.Data.Binding($"[{key}]"), Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells), MinWidth = 120, ElementStyle = cellTextStyle, CellStyle = cellPaddingStyle };
-                        FilesDataGrid.Columns.Add(col);
-                    }
-
-                    // populate rows
-                    foreach (var entry in analyzed)
-                    {
-                        var fr = new FileRow();
-                        fr.FileName = entry.Rel;
-
-                        var mfi = entry.Mfi;
-                        for (int vi = 0; vi < maxVideo; vi++)
-                        {
-                            string value = string.Empty;
-                            if (mfi != null && mfi.VideoStreams.Count > vi)
-                            {
-                                var v = mfi.VideoStreams[vi];
-                                var flagsLangTitle = StringFormatters.BuildFlagsLangTitle(v.Default, v.Forced, v.Language, v.Title, v.StreamSizeBytes, mfi?.FileSizeBytes ?? 0);
-                                var bitDepth = string.IsNullOrWhiteSpace(v.BitDepth) ? string.Empty : v.BitDepth.Trim();
-                                var formatWithDepth = string.IsNullOrWhiteSpace(bitDepth) ? v.Format : $"{v.Format}@{bitDepth}bit";
-
-                                var techParts = new[] {
-                                    formatWithDepth,
-                                    string.IsNullOrWhiteSpace(v.Width) || string.IsNullOrWhiteSpace(v.Height) ? string.Empty : $"{v.Width}x{v.Height}",
-                                    StringFormatters.NormalizeFrameRate(v.FrameRate),
-                                    StringFormatters.NormalizeBitrate(v.BitRate)
-                                }.Where(s => !string.IsNullOrWhiteSpace(s));
-                                var tech = string.Join("; ", techParts);
-                                value = string.IsNullOrWhiteSpace(tech) ? flagsLangTitle : (flagsLangTitle + "\n" + tech);
-                            }
-                            fr.Fields[$"Video {vi + 1}"] = value;
-                        }
-
-                        for (int ai = 0; ai < maxAudio; ai++)
-                        {
-                            string value = string.Empty;
-                            if (mfi != null && mfi.AudioStreams.Count > ai)
-                            {
-                                var a = mfi.AudioStreams[ai];
-                                var flagsLangTitle = StringFormatters.BuildFlagsLangTitle(a.Default, a.Forced, a.Language, a.Title, a.StreamSizeBytes, mfi?.FileSizeBytes ?? 0);
-                                var techParts = new[] { a.Format, StringFormatters.NormalizeChannels(a.Channels, a.ChannelPositions), a.SamplingRate, StringFormatters.NormalizeBitrate(a.BitRate) }.Where(s => !string.IsNullOrWhiteSpace(s));
-                                var tech = string.Join("; ", techParts);
-                                value = string.IsNullOrWhiteSpace(tech) ? flagsLangTitle : (flagsLangTitle + "\n" + tech);
-                            }
-                            fr.Fields[$"Audio {ai + 1}"] = value;
-                        }
-
-                        _rows.Add(fr);
-                    }
-                }
-                catch
-                {
-                    // ignore folders we can't access
                 }
             }
-            e.Handled = true;
+            return analyzed;
+        }
+
+        private void UpdateUI(List<(string Rel, MediaFileInfo Mfi)> analyzed)
+        {
+            _rows.Clear();
+            FilesDataGrid.Columns.Clear();
+
+            int maxVideo = analyzed.Max(a => a.Mfi?.VideoStreams?.Count ?? 0);
+            int maxAudio = analyzed.Max(a => a.Mfi?.AudioStreams?.Count ?? 0);
+
+            // rebuild DataGrid columns: keep File column first
+            var cellTextStyle = (Style)FindResource("CellTextStyle");
+            var cellPaddingStyle = (Style)FindResource("CellPaddingStyle");
+            FilesDataGrid.Columns.Add(new DataGridTextColumn { Header = "File", Binding = new Binding("FileName"), Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells), MinWidth = 200, ElementStyle = cellTextStyle, CellStyle = cellPaddingStyle });
+
+            for (int i = 0; i < maxVideo; i++)
+            {
+                var key = $"Video {i + 1}";
+                var col = new DataGridTextColumn { 
+                    Header = key, 
+                    Binding = new Binding($"[{key}]"), 
+                    Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells), 
+                    MinWidth = 120, 
+                    ElementStyle = cellTextStyle, 
+                    CellStyle = cellPaddingStyle
+                };
+                FilesDataGrid.Columns.Add(col);
+            }
+
+            for (int i = 0; i < maxAudio; i++)
+            {
+                var key = $"Audio {i + 1}";
+                var col = new DataGridTextColumn { 
+                    Header = key, 
+                    Binding = new Binding($"[{key}]"), 
+                    Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells), 
+                    MinWidth = 120, 
+                    ElementStyle = cellTextStyle, 
+                    CellStyle = cellPaddingStyle 
+                };
+                FilesDataGrid.Columns.Add(col);
+            }
+
+            foreach (var entry in analyzed)
+            {
+                var fr = new FileRow();
+                fr.FileName = entry.Rel;
+
+                var mfi = entry.Mfi;
+                for (int vi = 0; vi < maxVideo; vi++)
+                {
+                    var v = mfi.VideoStreams[vi];
+                    fr.Fields[$"Video {vi + 1}"] = v.ToString;
+                }
+
+                for (int ai = 0; ai < maxAudio; ai++)
+                {
+                    var a = mfi.AudioStreams[ai];
+                    fr.Fields[$"Audio {ai + 1}"] = a.ToString;
+                }
+
+                _rows.Add(fr);
+            }
         }
     }
 

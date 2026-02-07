@@ -1,169 +1,160 @@
+using MediaInfoLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MediaInfoLib;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media.Media3D;
 
 namespace ReleaseChecker
 {
+    /// <summary>
+    /// https://github.com/MediaArea/MediaInfoLib/blob/c3f46906117560790247bda52da04e4d8fcef6c7/Source/MediaInfo/MediaInfo_Config_Automatic.cpp
+    /// </summary>
+    
     public class MediaFileInfo
     {
         public string FilePath { get; set; }
         public string FileName => System.IO.Path.GetFileName(FilePath);
-        public string FileSize { get; set; }
         public long FileSizeBytes { get; set; }
-        public string Duration { get; set; }
 
         public List<VideoStreamInfo> VideoStreams { get; } = new List<VideoStreamInfo>();
         public List<AudioStreamInfo> AudioStreams { get; } = new List<AudioStreamInfo>();
         public List<SubtitleStreamInfo> SubtitleStreams { get; } = new List<SubtitleStreamInfo>();
-    }
 
-    public class VideoStreamInfo
-    {
-        public int Index { get; set; }
-        public string Format { get; set; }
-        public string CodecID { get; set; }
-        public string Width { get; set; }
-        public string Height { get; set; }
-        public string BitDepth { get; set; }
-        public long StreamSizeBytes { get; set; }
-        public string FrameRate { get; set; }
-        public string BitRate { get; set; }
-        public string Duration { get; set; }
-        public string AspectRatio { get; set; }
-        public string PixelFormat { get; set; }
-        public string Language { get; set; }
-        public string Title { get; set; }
-        public string Default { get; set; }
-        public string Forced { get; set; }
-    }
-
-    public class AudioStreamInfo
-    {
-        public int Index { get; set; }
-        public string Format { get; set; }
-        public string CodecID { get; set; }
-        public string Channels { get; set; }
-        public string ChannelPositions { get; set; }
-        public string SamplingRate { get; set; }
-        public string BitRate { get; set; }
-        public string Language { get; set; }
-        public string Duration { get; set; }
-        public string Title { get; set; }
-        public string Default { get; set; }
-        public string Forced { get; set; }
-        public long StreamSizeBytes { get; set; }
-    }
-
-    public class SubtitleStreamInfo
-    {
-        public int Index { get; set; }
-        public string Format { get; set; }
-        public string Language { get; set; }
-        public string Title { get; set; }
-        public string Default { get; set; }
-        public string Forced { get; set; }
-        public long StreamSizeBytes { get; set; }
-    }
-
-    public static class MediaInfoReader
-    {
-        public static MediaFileInfo Analyze(string filePath)
+        public MediaFileInfo(string filePath)
         {
             if (string.IsNullOrEmpty(filePath)) throw new ArgumentNullException(nameof(filePath));
 
-            var info = new MediaFileInfo { FilePath = filePath };
+            FilePath = filePath;
 
             var mi = new MediaInfo();
             try
             {
-                var openResult = mi.Open(filePath);
-                if (openResult == 0)
+                if (mi.Open(filePath) == 0) return;
+
+                FileSizeBytes = MediaInfoReader.SafeGetLong(mi, StreamKind.General, 0, "FileSize");
+
+                for (int i = 0; i < mi.Count_Get(StreamKind.Video); i++)
                 {
-                    // unable to open
-                    return info;
+                    VideoStreams.Add(new VideoStreamInfo(mi, i, this));
                 }
 
-                // General
-                info.FileSize = SafeGet(mi, StreamKind.General, 0, "FileSize/String");
-                info.FileSizeBytes = SafeGetLong(mi, StreamKind.General, 0, "FileSize");
-                info.Duration = SafeGet(mi, StreamKind.General, 0, "Duration/String3");
-
-                // Video streams
-                int videoCount = mi.Count_Get(StreamKind.Video);
-                for (int i = 0; i < videoCount; i++)
+                for (int i = 0; i < mi.Count_Get(StreamKind.Audio); i++)
                 {
-                    var vs = new VideoStreamInfo
-                    {
-                        Index = i,
-                        Format = SafeGet(mi, StreamKind.Video, i, "Format"),
-                        CodecID = SafeGet(mi, StreamKind.Video, i, "CodecID"),
-                        Width = SafeGet(mi, StreamKind.Video, i, "Width"),
-                        Height = SafeGet(mi, StreamKind.Video, i, "Height"),
-                        FrameRate = SafeGet(mi, StreamKind.Video, i, "FrameRate/String"),
-                        BitRate = SafeGet(mi, StreamKind.Video, i, "BitRate/String"),
-                        Duration = SafeGet(mi, StreamKind.Video, i, "Duration/String3"),
-                        AspectRatio = SafeGet(mi, StreamKind.Video, i, "DisplayAspectRatio/String"),
-                        PixelFormat = SafeGet(mi, StreamKind.Video, i, "ChromaSubsampling"),
-                        BitDepth = string.IsNullOrWhiteSpace(SafeGet(mi, StreamKind.Video, i, "BitDepth")) ? SafeGet(mi, StreamKind.Video, i, "Bit depth") : SafeGet(mi, StreamKind.Video, i, "BitDepth"),
-                        StreamSizeBytes = SafeGetLong(mi, StreamKind.Video, i, "StreamSize"),
-                        Language = SafeGet(mi, StreamKind.Video, i, "Language/String"),
-                        Title = SafeGet(mi, StreamKind.Video, i, "Title"),
-                        Default = SafeGet(mi, StreamKind.Video, i, "Default"),
-                        Forced = SafeGet(mi, StreamKind.Video, i, "Forced")
-                    };
-                    info.VideoStreams.Add(vs);
+                    AudioStreams.Add(new AudioStreamInfo(mi, i, this));
                 }
 
-                // Audio streams
-                int audioCount = mi.Count_Get(StreamKind.Audio);
-                for (int i = 0; i < audioCount; i++)
+                for (int i = 0; i < mi.Count_Get(StreamKind.Text); i++)
                 {
-                    var a = new AudioStreamInfo
-                    {
-                        Index = i,
-                        Format = SafeGet(mi, StreamKind.Audio, i, "Format"),
-                        CodecID = SafeGet(mi, StreamKind.Audio, i, "CodecID"),
-                        Channels = SafeGet(mi, StreamKind.Audio, i, "Channel(s)"),
-                        ChannelPositions = SafeGet(mi, StreamKind.Audio, i, "ChannelPositions/String"),
-                        SamplingRate = SafeGet(mi, StreamKind.Audio, i, "SamplingRate/String"),
-                        BitRate = SafeGet(mi, StreamKind.Audio, i, "BitRate/String"),
-                        Language = SafeGet(mi, StreamKind.Audio, i, "Language/String"),
-                        Duration = SafeGet(mi, StreamKind.Audio, i, "Duration/String3"),
-                        Title = SafeGet(mi, StreamKind.Audio, i, "Title"),
-                        Default = SafeGet(mi, StreamKind.Audio, i, "Default"),
-                        Forced = SafeGet(mi, StreamKind.Audio, i, "Forced"),
-                        StreamSizeBytes = SafeGetLong(mi, StreamKind.Audio, i, "StreamSize")
-                    };
-                    info.AudioStreams.Add(a);
-                }
-
-                // Text (subtitles) streams
-                int textCount = mi.Count_Get(StreamKind.Text);
-                for (int i = 0; i < textCount; i++)
-                {
-                    var s = new SubtitleStreamInfo
-                    {
-                        Index = i,
-                        Format = SafeGet(mi, StreamKind.Text, i, "Format"),
-                        Language = SafeGet(mi, StreamKind.Text, i, "Language/String"),
-                        Title = SafeGet(mi, StreamKind.Text, i, "Title"),
-                        Default = SafeGet(mi, StreamKind.Text, i, "Default"),
-                        Forced = SafeGet(mi, StreamKind.Text, i, "Forced"),
-                        StreamSizeBytes = SafeGetLong(mi, StreamKind.Text, i, "StreamSize")
-                    };
-                    info.SubtitleStreams.Add(s);
+                    SubtitleStreams.Add(new SubtitleStreamInfo(mi, i, this));
                 }
             }
             finally
             {
                 try { mi.Close(); } catch { }
             }
+        }
+    }
 
-            return info;
+    public class CoreStreamInfo
+    {
+        public int Index { get; set; }
+        public StreamKind StreamKind { get; set; }
+        public MediaFileInfo ParentFile { get; set; }
+        public long StreamSizeBytes { get; set; }
+        public string Format { get; set; }
+        public string Language { get; set; }
+        public string Title { get; set; }
+        public bool? Default { get; set; }
+        public bool? Forced { get; set; }
+        public CoreStreamInfo(MediaInfo mi, int i, StreamKind kind, MediaFileInfo parent)
+        {
+            Index = i;
+            StreamKind = kind;
+            ParentFile = parent;
+            StreamSizeBytes = MediaInfoReader.SafeGetLong(mi, StreamKind.Video, i, "StreamSize");
+            Format = MediaInfoReader.SafeGet(mi, kind, i, "Format");
+            Language = MediaInfoReader.SafeGet(mi, kind, i, "Language/String");
+            Title = MediaInfoReader.SafeGet(mi, kind, i, "Title");
+            Default = MediaInfoReader.SafeGetTag(mi, kind, i, "Default");
+            Forced = MediaInfoReader.SafeGetTag(mi, kind, i, "Forced");
+        }
+    }
+
+    public class VideoStreamInfo : CoreStreamInfo
+    {
+        public string CodecID { get; set; }
+        public string Width { get; set; }
+        public string Height { get; set; }
+        public string BitDepth { get; set; }
+        public string FrameRate { get; set; }
+        public string BitRate { get; set; }
+        public string Duration { get; set; }
+        public string AspectRatio { get; set; }
+
+        public VideoStreamInfo(MediaInfo mi, int i, MediaFileInfo parent) : base(mi, i, StreamKind.Video, parent)
+        {
+            CodecID = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "CodecID");
+            Width = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "Width");
+            Height = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "Height");
+            FrameRate = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "FrameRate/String");
+            BitRate = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "BitRate/String");
+            Duration = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "Duration/String3");
+            AspectRatio = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "DisplayAspectRatio/String");
+            BitDepth = string.IsNullOrWhiteSpace(MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "BitDepth")) ?
+                MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "Bit depth") :
+                MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "BitDepth");
         }
 
-        private static string SafeGet(MediaInfo mi, StreamKind kind, int streamNumber, string parameter)
+        public new string ToString 
+        {
+            get
+            {
+                return StringFormatters.ComposeLine1(this) + 
+                    $"\n{Format}@{BitDepth}bit; {Width}x{Height}; {StringFormatters.NormalizeFrameRate(FrameRate)}; {StringFormatters.NormalizeBitrate(BitRate)}";
+            }
+        }
+    }
+
+    public class AudioStreamInfo : CoreStreamInfo
+    {
+        public string CodecID { get; set; }
+        public string Channels { get; set; }
+        public string ChannelPositions { get; set; }
+        public string SamplingRate { get; set; }
+        public string BitRate { get; set; }
+        public string Duration { get; set; }
+
+        public AudioStreamInfo(MediaInfo mi, int i, MediaFileInfo parent) : base(mi, i, StreamKind.Audio, parent)
+        {
+            CodecID = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "CodecID");
+            Channels = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "Channel(s)");
+            ChannelPositions = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "ChannelPositions/String");
+            SamplingRate = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "SamplingRate/String");
+            BitRate = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "BitRate/String");
+            Duration = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "Duration/String3");
+        }
+
+        public new string ToString
+        {
+            get
+            {
+                return StringFormatters.ComposeLine1(this) +
+                    $"\n{Format}; {StringFormatters.NormalizeChannels(Channels, ChannelPositions)}; {SamplingRate}; {StringFormatters.NormalizeBitrate(BitRate)}";
+            }
+        }
+    }
+
+    public class SubtitleStreamInfo : CoreStreamInfo
+    {
+        public SubtitleStreamInfo(MediaInfo mi, int i, MediaFileInfo parent) : base(mi, i, StreamKind.Text, parent)
+        {
+        }
+    }
+
+    public static class MediaInfoReader
+    {
+        internal static string SafeGet(MediaInfo mi, StreamKind kind, int streamNumber, string parameter)
         {
             try
             {
@@ -176,7 +167,7 @@ namespace ReleaseChecker
             }
         }
 
-        private static long SafeGetLong(MediaInfo mi, StreamKind kind, int streamNumber, string parameter)
+        internal static long SafeGetLong(MediaInfo mi, StreamKind kind, int streamNumber, string parameter)
         {
             try
             {
@@ -195,6 +186,25 @@ namespace ReleaseChecker
             catch
             {
                 return 0;
+            }
+        }
+
+        internal static bool? SafeGetTag(MediaInfo mi, StreamKind kind, int streamNumber, string parameter)
+        {
+            try
+            {
+                var value = mi.Get(kind, streamNumber, parameter);
+
+                if (string.IsNullOrWhiteSpace(value)) return false;
+
+                var v = value.Trim().ToLowerInvariant();
+                if (v == "yes" || v == "y" || v == "1" || v == "true" || v == "да") return true;
+
+                return false;
+            }
+            catch
+            {
+                return null;
             }
         }
     }

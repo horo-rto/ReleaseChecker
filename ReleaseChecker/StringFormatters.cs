@@ -1,3 +1,4 @@
+using MediaInfoLib;
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -14,25 +15,22 @@ namespace ReleaseChecker
             return "[ ]";
         }
 
-        public static string BuildFlagsLangTitle(string def, string forced, string lang, string title, long streamBytes = 0, long fileBytes = 0)
+        public static string ComposeLine1(CoreStreamInfo info)
         {
-            var flagDef = FlagBox(def);
-            var flagForced = FlagBox(forced);
-            // combine flags and percent without space between them
-            var flagPart = flagDef + flagForced;
-            if (fileBytes > 0 && streamBytes > 0)
+            var parts = new List<string>
             {
-                try
-                {
-                    var pct = (int)((streamBytes * 100L) / fileBytes);
-                    flagPart = flagPart + $"[{pct}%]";
-                }
-                catch { }
+                info.Default??false ? "[x]" : "[ ]" ,
+                info.Forced??false ? "[x]" : "[ ]" ,
+            };
+
+            if (info.StreamKind != StreamKind.Text && info.ParentFile.FileSizeBytes > 0 && info.StreamSizeBytes > 0)
+            {
+                parts.Add($"[{(int)((info.StreamSizeBytes * 100L) / info.ParentFile.FileSizeBytes)}%]");
             }
-            var parts = new System.Collections.Generic.List<string> { flagPart };
-            var langTitle = string.Join(" ", new[] { lang, title }.Where(s => !string.IsNullOrWhiteSpace(s)));
-            if (!string.IsNullOrWhiteSpace(langTitle)) parts.Add(langTitle);
-            return string.Join(" ", parts).Trim();
+
+            if (!string.IsNullOrWhiteSpace(info.Language)) parts.Add(" " + info.Language);
+            if (!string.IsNullOrWhiteSpace(info.Title)) parts.Add(" " + info.Title);
+            return string.Join("", parts).Trim();
         }
 
         public static string NormalizeFrameRate(string fr)
@@ -69,48 +67,25 @@ namespace ReleaseChecker
 
         public static string NormalizeChannels(string ch, string channelPositions)
         {
-            if (string.IsNullOrWhiteSpace(ch) && string.IsNullOrWhiteSpace(channelPositions)) return string.Empty;
+            if (string.IsNullOrWhiteSpace(ch)) return string.Empty;
 
-            // check if channelPositions contains LFE -> then this stream has a .1 LFE channel
-            bool hasLfe = false;
-            if (!string.IsNullOrWhiteSpace(channelPositions))
-            {
-                var cp = channelPositions.ToLowerInvariant();
-                if (cp.Contains("lfe") || cp.Contains("low frequency")) hasLfe = true;
-            }
+            var s = ch.ToLowerInvariant();
 
-            var s = (ch ?? string.Empty).Trim().ToLowerInvariant();
-            // already like 5.1 or 2.0
-            var mDot = Regex.Match(s, "\\d+\\.\\d+");
-            if (mDot.Success) return mDot.Value;
-
-            // common words
-            if (s.Contains("stereo"))
-            {
-                return hasLfe ? "1.1" : "2.0";
-            }
+            if (s.Contains("stereo")) return "2.0";
             if (s.Contains("mono")) return "1.0";
 
-            // extract number of channels
-            var m = Regex.Match(s, "\\d+");
-            if (m.Success)
+            if (string.IsNullOrWhiteSpace(channelPositions)) return ch+".0";
+
+            var cp = channelPositions.ToLowerInvariant();
+            bool hasLfe = cp.Contains("lfe") || cp.Contains("low frequency");
+
+            if (int.TryParse(ch, out var n))
             {
-                if (int.TryParse(m.Value, out var n))
-                {
-                    if (hasLfe && n > 0)
-                    {
-                        // subtract LFE channel for the left.right count
-                        var main = n - 1;
-                        if (main < 1) main = 1;
-                        return main + ".1";
-                    }
-                    else
-                    {
-                        return n + ".0";
-                    }
-                }
+                if (hasLfe) return (n - 1) + ".1";
+                else return n + ".0";
             }
-            return ch ?? string.Empty;
+
+            return ch;
         }
     }
 }
