@@ -49,6 +49,24 @@ namespace ReleaseChecker
             {
                 try { mi.Close(); } catch { }
             }
+
+            CheckLanguageOrder();
+        }
+
+        private void CheckLanguageOrder()
+        {
+            bool foreignSeen = false;
+            foreach (var audio in AudioStreams)
+            {
+                var lang = (audio.Language ?? "").Trim().ToLowerInvariant();
+                bool isRussian = lang.Contains("ru") || lang.Contains("рус");
+
+                if (!isRussian && !string.IsNullOrEmpty(lang))
+                    foreignSeen = true;
+
+                if (isRussian && foreignSeen)
+                    audio.LanguageError = true;
+            }
         }
     }
 
@@ -84,6 +102,8 @@ namespace ReleaseChecker
             (Default == true && Index > 0) ||
             (Default == false && Index == 0);
         public bool ForcedError => Forced == true;
+        public bool LanguageError { get; set; }
+        public bool FormatError { get; set; }
         protected string NormalizeBitrate(string br)
         {
             if (string.IsNullOrWhiteSpace(br)) return string.Empty;
