@@ -29,10 +29,7 @@ namespace ReleaseChecker
             if (mi.Open(filePath) == 0)
             {
                 mi.Close();
-                bool exists = System.IO.File.Exists(filePath);
-                long size = exists ? new System.IO.FileInfo(filePath).Length : -1;
-                string ver = mi.Option("Info_Version");
-                throw new Exception($"MediaInfo failed.\nPath: {filePath}\nExists: {exists}\nMI version: {ver}");
+                throw new Exception($"MediaInfo failed.");
             }
 
             FileSizeBytes = MediaInfoReader.SafeGetLong(mi, StreamKind.General, 0, "FileSize");
@@ -55,6 +52,7 @@ namespace ReleaseChecker
             mi.Close();
 
             CheckLanguageOrder();
+
         }
 
         private void CheckLanguageOrder()
@@ -167,6 +165,12 @@ namespace ReleaseChecker
         }
         public string Resolution => $"{Width}x{Height}";
         public string BitRateToString => NormalizeBitrate(BitRate);
+        public string FormatToString => Format switch
+        {
+            "MPEG-4 Visual" => "XVID",
+            _ => Format,
+        };
+
         public bool PercentageError => ParentFile.FileSizeBytes > 0 ? ((StreamSizeBytes * 100L / ParentFile.FileSizeBytes) < 50) : false;
         public bool BitDepthError { get; set; }
         public bool FrameRateError { get; set; }
@@ -184,20 +188,26 @@ namespace ReleaseChecker
 
     public class AudioStreamInfo : CoreStreamInfo
     {
-        public string CodecID { get; set; }
+        public string FormatProfile { get; set; }
+        public string AdditionalFeatures { get; set; }
+        public string NumberOfDynamicObjects { get; set; }
         public string Channels { get; set; }
         public string ChannelPositions { get; set; }
         public string SamplingRate { get; set; }
         public string BitRate { get; set; }
+        public string BitDepth { get; set; }
         public string Duration { get; set; }
 
         public AudioStreamInfo(MediaInfo mi, int i, MediaFileInfo parent) : base(mi, i, StreamKind.Audio, parent)
         {
-            CodecID = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "CodecID");
+            FormatProfile = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "Format_Profile");
+            AdditionalFeatures = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "Format_AdditionalFeatures");
+            NumberOfDynamicObjects = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "NumberOfDynamicObjects");
             Channels = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "Channel(s)");
-            ChannelPositions = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "ChannelPositions");
+            ChannelPositions = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "ChannelLayout");
             SamplingRate = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "SamplingRate/String");
             BitRate = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "BitRate/String");
+            BitDepth = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "BitDepth");
             Duration = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "Duration/String3");
         }
 
@@ -227,6 +237,27 @@ namespace ReleaseChecker
             }
         }
         public string BitRateToString => NormalizeBitrate(BitRate);
+
+        public string FormatRewrittenWithLayer => Format switch
+        {
+            "MPEG Audio" => "MP" + FormatProfile.Replace("Layer ", ""),
+            "AAC" => "AAC" + (string.IsNullOrEmpty(FormatProfile) ? "" : " " + FormatProfile),
+            "MLP FBA" => "Dolby TrueHD",
+            "DTS XLL" => "DHS-HD MA",
+            _ => Format,
+        };
+        public string FormatToString => AdditionalFeatures switch
+        {
+            "" => FormatRewrittenWithLayer,
+            "XLL" => "DHS-HD MA",
+            "JOC" => FormatRewrittenWithLayer + " Atmos",
+            _ => NumberOfDynamicObjects switch
+            {
+                "" => FormatRewrittenWithLayer + " " + AdditionalFeatures,
+                _ => FormatRewrittenWithLayer + " Atmos (" + NumberOfDynamicObjects + " objects)",
+            },
+        };
+
         public bool PercentageError => ParentFile.VideoStream?.StreamSizeBytes > 0 ? (StreamSizeBytes * 100L / ParentFile.VideoStream.StreamSizeBytes) > 33 : false;
         public bool ChannelsError { get; set; }
         public bool BitRateError { get; set; }
@@ -250,6 +281,13 @@ namespace ReleaseChecker
         {
             LineCount = MediaInfoReader.SafeGet(mi, StreamKind.Text, i, "ElementCount");
         }
+        public string FormatToString => Format switch
+        {
+            "UTF-8" => "SRT",
+            _ => Format,
+        };
+        public new bool DefaultError =>
+            (Default == true && Index > 0);
     }
 
     public static class MediaInfoReader

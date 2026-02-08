@@ -1,22 +1,12 @@
 ﻿using MediaInfoLib;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
-using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using IOPath = System.IO.Path;
 
 namespace ReleaseChecker
@@ -48,6 +38,17 @@ namespace ReleaseChecker
 
             this.MaxWidth = SystemParameters.WorkArea.Width;
             this.MaxHeight = SystemParameters.WorkArea.Height;
+
+            var appVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            var miVer = new MediaInfo().Option("Info_Version");
+
+            Title = $"Drop folders or files here [v{appVer?.ToString(3) ?? "?"}] [{miVer}]";
+
+            if (miVer.Contains("Unable"))
+            {
+                ErrorPanel.Visibility = Visibility.Visible;
+                ErrorText.Text = $"MediaInfo.dll not found. Place MediaInfo.dll next to the executable.\nExpected path: {AppContext.BaseDirectory}";
+            }
         }
 
         private void Window_DragOver(object sender, DragEventArgs e)
@@ -71,7 +72,9 @@ namespace ReleaseChecker
             e.Handled = true;
         }
 
-        private void Window_Drop(object sender, DragEventArgs e)
+        private CancellationTokenSource? _cts;
+
+        private async void Window_Drop(object sender, DragEventArgs e)
         {
             try
             {
@@ -79,33 +82,65 @@ namespace ReleaseChecker
 
                 var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
 
-                var data = ReadData(paths);
-                DumpJson(data);
+                _cts?.Cancel();
+                _cts = new CancellationTokenSource();
+                var token = _cts.Token;
 
-                foreach (var group in data.GroupBy(e => e.Mfi.FolderPath))
-                    Checker.CheckConsistency(group.Select(e => e.Mfi).ToList());
+                InfoPanel.Visibility = Visibility.Visible;
+                InfoProgress.Value = 0;
+                InfoText.Text = "Reading files...";
+
+                var progress = new Progress<(int current, int total)>(p =>
+                {
+                    InfoProgress.Value = (double)p.current / p.total * 100;
+                    InfoText.Text = $"Reading files... {p.current}/{p.total}";
+                });
+
+                var data = await Task.Run(() =>
+                {
+                    var result = ReadData(paths, progress, token);
+
+                    foreach (var group in result.GroupBy(e => e.Mfi.FolderPath))
+                        Checker.CheckConsistency(group.Select(e => e.Mfi).ToList());
+
+                    return result;
+                }, token);
 
                 UpdateUI(data);
+                InfoPanel.Visibility = Visibility.Collapsed;
 
                 e.Handled = true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                InfoPanel.Visibility = Visibility.Collapsed;
+                ErrorPanel.Visibility = Visibility.Visible;
+                ErrorText.Text = ex.ToString();
             }
         }
 
-        private List<(string Rel, MediaFileInfo Mfi)> ReadData(string[] paths)
+        private List<(string Rel, MediaFileInfo Mfi)> ReadData(string[] paths, IProgress<(int current, int total)> progress, CancellationToken ct)
         {
             var analyzed = new List<(string Rel, MediaFileInfo Mfi)>();
 
+            // Count total files first
+            int total = 0;
+            foreach (var path in paths)
+            {
+                if (File.Exists(path)) total++;
+                if (Directory.Exists(path)) total += Directory.GetFiles(path, "*", SearchOption.AllDirectories).Length;
+            }
+
+            int current = 0;
             foreach (var path in paths)
             {
                 if (File.Exists(path))
                 {
+                    ct.ThrowIfCancellationRequested();
                     var rel = IOPath.GetFileName(path);
                     var mfi = new MediaFileInfo(path);
                     analyzed.Add((rel, mfi));
+                    progress.Report((++current, total));
                 }
 
                 if (Directory.Exists(path))
@@ -113,13 +148,22 @@ namespace ReleaseChecker
                     var files = Directory.GetFiles(path, "*", SearchOption.AllDirectories).OrderBy(f => f);
                     foreach (var file in files)
                     {
+                        ct.ThrowIfCancellationRequested();
                         var rel = IOPath.GetRelativePath(path, file);
                         var mfi = new MediaFileInfo(file);
                         analyzed.Add((rel, mfi));
+                        progress.Report((++current, total));
                     }
                 }
             }
             return analyzed;
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _cts?.Cancel();
+            base.OnClosed(e);
+            Environment.Exit(0);
         }
 
         private void DumpJson(List<(string Rel, MediaFileInfo Mfi)> data)
@@ -159,7 +203,7 @@ namespace ReleaseChecker
                 };
                 var mfi = entry.Mfi;
 
-                fr.Fields["FileName"] = entry.Rel;
+                fr.Fields["FileName"] = mfi.FileName;
                 if (mfi.VideoStream != null) fr.Fields["Video"] = mfi.VideoStream;
 
                 for (int a = 0; a < maxAudio; a++)
