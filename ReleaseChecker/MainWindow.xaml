@@ -53,18 +53,7 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                    <TextBlock Text="{Binding Language}" Margin="4,0,0,0">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding LanguageError}" Value="True">
-                                        <Setter Property="Foreground" Value="Red"/>
-                                        <Setter Property="FontWeight" Value="Bold"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
+                    <TextBlock Text="{Binding Language}" Margin="4,0,0,0"/>
                     <TextBlock Text="{Binding Title}" Margin="4,0,0,0"/>
                 </WrapPanel>
                 <WrapPanel>
@@ -123,7 +112,35 @@
                         </TextBlock.Style>
                     </TextBlock>
                     <TextBlock Text="; " Foreground="Gray"/>
-                    <TextBlock Text="{Binding BitRateToString}" Foreground="Gray"/>
+                    <TextBlock Text="{Binding BitRateToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding BitRateError}" Value="1">
+                                        <Setter Property="Foreground" Value="#979700"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding BitRateError}" Value="2">
+                                        <Setter Property="Foreground" Value="#FFD400"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding BitRateError}" Value="3">
+                                        <Setter Property="Foreground" Value="#FFAA00"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding BitRateError}" Value="4">
+                                        <Setter Property="Foreground" Value="#FF6A00"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding BitRateError}" Value="5">
+                                        <Setter Property="Foreground" Value="#FF0000"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </WrapPanel>
             </StackPanel>
         </DataTemplate>
@@ -175,11 +192,26 @@
                                         <Setter Property="Foreground" Value="Red"/>
                                         <Setter Property="FontWeight" Value="Bold"/>
                                     </DataTrigger>
+                                    <DataTrigger Binding="{Binding LanguageOrderError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                    <TextBlock Text="{Binding Title}" Margin="4,0,0,0"/>
+                    <TextBlock Text="{Binding Title}" Margin="4,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TitleError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </WrapPanel>
                 <WrapPanel>
                     <TextBlock Text="{Binding FormatToString}">
@@ -229,8 +261,24 @@
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="Gray"/>
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding BitRateError}" Value="True">
-                                        <Setter Property="Foreground" Value="Red"/>
+                                    <DataTrigger Binding="{Binding BitRateError}" Value="1">
+                                        <Setter Property="Foreground" Value="#979700"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding BitRateError}" Value="2">
+                                        <Setter Property="Foreground" Value="#FFD400"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding BitRateError}" Value="3">
+                                        <Setter Property="Foreground" Value="#FFAA00"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding BitRateError}" Value="4">
+                                        <Setter Property="Foreground" Value="#FF6A00"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding BitRateError}" Value="5">
+                                        <Setter Property="Foreground" Value="#FF0000"/>
                                         <Setter Property="FontWeight" Value="Bold"/>
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -273,6 +321,10 @@
                             <Style TargetType="TextBlock">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding LanguageError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding LanguageOrderError}" Value="True">
                                         <Setter Property="Foreground" Value="Red"/>
                                         <Setter Property="FontWeight" Value="Bold"/>
                                     </DataTrigger>
