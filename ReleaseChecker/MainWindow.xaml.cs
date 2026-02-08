@@ -41,7 +41,14 @@ namespace ReleaseChecker
 
             var appVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             var miVer = new MediaInfo().Option("Info_Version");
+
             Title = $"Drop folders or files here [v{appVer?.ToString(3) ?? "?"}] [{miVer}]";
+
+            if (miVer.Contains("Unable"))
+            {
+                ErrorPanel.Visibility = Visibility.Visible;
+                ErrorText.Text = $"MediaInfo.dll not found. Place MediaInfo.dll next to the executable.\nExpected path: {AppContext.BaseDirectory}";
+            }
         }
 
         private void Window_DragOver(object sender, DragEventArgs e)
@@ -65,7 +72,7 @@ namespace ReleaseChecker
             e.Handled = true;
         }
 
-        private void Window_Drop(object sender, DragEventArgs e)
+        private async void Window_Drop(object sender, DragEventArgs e)
         {
             try
             {
@@ -73,19 +80,31 @@ namespace ReleaseChecker
 
                 var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
 
-                var data = ReadData(paths);
-                DumpJson(data);
+                InfoPanel.Visibility = Visibility.Visible;
+                InfoProgress.Value = 0;
+                InfoText.Text = "Reading files...";
 
-                foreach (var group in data.GroupBy(e => e.Mfi.FolderPath))
-                    Checker.CheckConsistency(group.Select(e => e.Mfi).ToList());
+                var data = await Task.Run(() =>
+                {
+                    var result = ReadData(paths);
+                    //DumpJson(result);
+
+                    foreach (var group in result.GroupBy(e => e.Mfi.FolderPath))
+                        Checker.CheckConsistency(group.Select(e => e.Mfi).ToList());
+
+                    return result;
+                });
 
                 UpdateUI(data);
+                InfoPanel.Visibility = Visibility.Collapsed;
 
                 e.Handled = true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                InfoPanel.Visibility = Visibility.Collapsed;
+                ErrorPanel.Visibility = Visibility.Visible;
+                ErrorText.Text = ex.ToString();
             }
         }
 

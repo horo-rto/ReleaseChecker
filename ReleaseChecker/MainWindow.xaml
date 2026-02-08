@@ -292,41 +292,60 @@
     </Window.Resources>
 
     <Grid AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop">
-            <DataGrid x:Name="FilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" 
-                      VerticalAlignment="Stretch"
-                      HeadersVisibility="Column"
-                      Background="{DynamicResource SurfaceBrush}"
-                      Foreground="{DynamicResource AppForeground}"
-                      RowBackground="{DynamicResource SurfaceBrush}"
-                      AlternatingRowBackground="{DynamicResource AltSurfaceBrush}"
-                      GridLinesVisibility="Horizontal"
-                      HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
-                      VerticalGridLinesBrush="{DynamicResource GridLineBrush}">
+        <DataGrid x:Name="FilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                    VerticalAlignment="Stretch"
+                    HeadersVisibility="Column"
+                    Background="{DynamicResource SurfaceBrush}"
+                    Foreground="{DynamicResource AppForeground}"
+                    RowBackground="{DynamicResource SurfaceBrush}"
+                    AlternatingRowBackground="{DynamicResource AltSurfaceBrush}"
+                    GridLinesVisibility="Horizontal"
+                    HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
+                    VerticalGridLinesBrush="{DynamicResource GridLineBrush}">
 
-                <DataGrid.GroupStyle>
-                    <GroupStyle>
-                        <GroupStyle.ContainerStyle>
-                            <Style TargetType="{x:Type GroupItem}">
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="{x:Type GroupItem}">
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" 
-                                                           Foreground="Gray" FontSize="22"
-                                                           Background="{DynamicResource AppBackground}"
-                                                           Padding="6,4"/>
-                                                <ItemsPresenter/>
-                                            </StackPanel>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </GroupStyle.ContainerStyle>
-                    </GroupStyle>
-                </DataGrid.GroupStyle>
+            <DataGrid.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.ContainerStyle>
+                        <Style TargetType="{x:Type GroupItem}">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type GroupItem}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" 
+                                                        Foreground="Gray" FontSize="22"
+                                                        Background="{DynamicResource AppBackground}"
+                                                        Padding="6,4"/>
+                                            <ItemsPresenter/>
+                                        </StackPanel>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </GroupStyle.ContainerStyle>
+                </GroupStyle>
+            </DataGrid.GroupStyle>
 
-                <DataGrid.Columns/>
+            <DataGrid.Columns/>
 
-            </DataGrid>
+        </DataGrid>
+
+        <Border x:Name="ErrorPanel" Visibility="Collapsed"
+                Background="#CC2200" CornerRadius="8" Padding="24,16"
+                HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock x:Name="ErrorText" Foreground="White" FontWeight="Bold"
+                       TextWrapping="Wrap" FontSize="14" TextAlignment="Center"/>
+        </Border>
+
+        <Border x:Name="InfoPanel" Visibility="Collapsed"
+                Background="#FF3A3A3A" CornerRadius="8" Padding="24,16"
+                HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel MinWidth="300">
+                <TextBlock x:Name="InfoText" Foreground="White" FontWeight="Bold"
+                           TextWrapping="Wrap" FontSize="14" TextAlignment="Center"/>
+                <ProgressBar x:Name="InfoProgress" Height="6" Margin="0,8,0,0"
+                             Minimum="0" Maximum="100" Value="0"
+                             Background="#FF555555" Foreground="#FF00AAFF"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>
