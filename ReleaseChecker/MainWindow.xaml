@@ -342,7 +342,7 @@
             <StackPanel MinWidth="300">
                 <TextBlock x:Name="InfoText" Foreground="White" FontWeight="Bold"
                            TextWrapping="Wrap" FontSize="14" TextAlignment="Center"/>
-                <ProgressBar x:Name="InfoProgress" Height="6" Margin="0,8,0,0"
+                <ProgressBar x:Name="InfoProgress" Height="16" Margin="0,8,0,0"
                              Minimum="0" Maximum="100" Value="0"
                              Background="#FF555555" Foreground="#FF00AAFF"/>
             </StackPanel>

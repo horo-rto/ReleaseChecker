@@ -84,9 +84,15 @@ namespace ReleaseChecker
                 InfoProgress.Value = 0;
                 InfoText.Text = "Reading files...";
 
+                var progress = new Progress<(int current, int total)>(p =>
+                {
+                    InfoProgress.Value = (double)p.current / p.total * 100;
+                    InfoText.Text = $"Reading files... {p.current}/{p.total}";
+                });
+
                 var data = await Task.Run(() =>
                 {
-                    var result = ReadData(paths);
+                    var result = ReadData(paths, progress);
                     //DumpJson(result);
 
                     foreach (var group in result.GroupBy(e => e.Mfi.FolderPath))
@@ -108,10 +114,19 @@ namespace ReleaseChecker
             }
         }
 
-        private List<(string Rel, MediaFileInfo Mfi)> ReadData(string[] paths)
+        private List<(string Rel, MediaFileInfo Mfi)> ReadData(string[] paths, IProgress<(int current, int total)> progress)
         {
             var analyzed = new List<(string Rel, MediaFileInfo Mfi)>();
 
+            // Count total files first
+            int total = 0;
+            foreach (var path in paths)
+            {
+                if (File.Exists(path)) total++;
+                if (Directory.Exists(path)) total += Directory.GetFiles(path, "*", SearchOption.AllDirectories).Length;
+            }
+
+            int current = 0;
             foreach (var path in paths)
             {
                 if (File.Exists(path))
@@ -119,6 +134,7 @@ namespace ReleaseChecker
                     var rel = IOPath.GetFileName(path);
                     var mfi = new MediaFileInfo(path);
                     analyzed.Add((rel, mfi));
+                    progress.Report((++current, total));
                 }
 
                 if (Directory.Exists(path))
@@ -129,6 +145,7 @@ namespace ReleaseChecker
                         var rel = IOPath.GetRelativePath(path, file);
                         var mfi = new MediaFileInfo(file);
                         analyzed.Add((rel, mfi));
+                        progress.Report((++current, total));
                     }
                 }
             }
