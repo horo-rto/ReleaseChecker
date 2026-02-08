@@ -5,26 +5,328 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:ReleaseChecker"
     mc:Ignorable="d"
-    Title="Drop folders or files here" Height="700" Width="1000" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" MinWidth="900" MinHeight="600"
-    Background="{DynamicResource AppBackground}" Foreground="{DynamicResource AppForeground}">
+    Title="Drop folders or files here" 
+    Height="700" Width="1000" MinWidth="900" MinHeight="600"
+    SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" 
+    Background="{DynamicResource AppBackground}" 
+    Foreground="{DynamicResource AppForeground}"
+    FontSize="16"
+    PreviewMouseWheel="Window_PreviewMouseWheel">
     <Window.Resources>
-        <Style x:Key="CellTextStyle" TargetType="TextBlock">
-            <Setter Property="TextWrapping" Value="Wrap"/>
-            <Setter Property="TextTrimming" Value="None"/>
-            <Setter Property="Foreground" Value="{DynamicResource AppForeground}"/>
-        </Style>
-        <Style x:Key="CellPaddingStyle" TargetType="DataGridCell">
-            <Setter Property="Padding" Value="1"/>
-        </Style>
+        <!-- Templates for Video/Audio objects -->
+        <DataTemplate DataType="{x:Type local:VideoStreamInfo}">
+            <StackPanel>
+                <WrapPanel>
+                    <TextBlock Text="{Binding DefaultToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DefaultError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding ForcedToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ForcedError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Percentage}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding PercentageError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Language}" Margin="4,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding LanguageError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Title}" Margin="4,0,0,0"/>
+                </WrapPanel>
+                <WrapPanel>
+                    <TextBlock Text="{Binding Format}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FormatError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding BitDepth, StringFormat=@{0}bit}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding BitDepthError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="; " Foreground="Gray"/>
+                    <TextBlock Text="{Binding Resolution}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ResolutionError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="; " Foreground="Gray"/>
+                    <TextBlock Text="{Binding FrameRateToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FrameRateError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="; " Foreground="Gray"/>
+                    <TextBlock Text="{Binding BitRateToString}" Foreground="Gray"/>
+                </WrapPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type local:AudioStreamInfo}">
+            <StackPanel>
+                <WrapPanel>
+                    <TextBlock Text="{Binding DefaultToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DefaultError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding ForcedToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ForcedError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Percentage}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding PercentageError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Language}" Margin="4,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding LanguageError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Title}" Margin="4,0,0,0"/>
+                </WrapPanel>
+                <WrapPanel>
+                    <TextBlock Text="{Binding Format}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FormatError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="; " Foreground="Gray"/>
+                    <TextBlock Text="{Binding ChannelsToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ChannelsError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="; " Foreground="Gray"/>
+                    <TextBlock Text="{Binding SamplingRate}" Foreground="Gray"/>
+                    <TextBlock Text="; " Foreground="Gray"/>
+                    <TextBlock Text="{Binding BitRateToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding BitRateError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </WrapPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type local:SubtitleStreamInfo}">
+            <StackPanel>
+                <WrapPanel>
+                    <TextBlock Text="{Binding DefaultToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DefaultError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding ForcedToString}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ForcedError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Language}" Margin="4,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding LanguageError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Title}" Margin="4,0,0,0"/>
+                </WrapPanel>
+                <WrapPanel>
+                    <TextBlock Text="{Binding Format}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FormatError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="; " Foreground="Gray"/>
+                    <TextBlock Text="{Binding LineCount, StringFormat={}{0} lines}" Foreground="Gray"/>
+                </WrapPanel>
+            </StackPanel>
+        </DataTemplate>
     </Window.Resources>
+
     <Grid AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop">
-        <DataGrid x:Name="FilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" Grid.Row="1" VerticalAlignment="Stretch" 
-                    Background="{DynamicResource SurfaceBrush}"
-                    Foreground="{DynamicResource AppForeground}"
-                    RowBackground="{DynamicResource SurfaceBrush}"
-                    AlternatingRowBackground="{DynamicResource AltSurfaceBrush}"
-                    GridLinesVisibility="Horizontal"
-                    HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
-                    VerticalGridLinesBrush="{DynamicResource GridLineBrush}"/>
+            <DataGrid x:Name="FilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                      VerticalAlignment="Stretch"
+                      HeadersVisibility="Column"
+                      Background="{DynamicResource SurfaceBrush}"
+                      Foreground="{DynamicResource AppForeground}"
+                      RowBackground="{DynamicResource SurfaceBrush}"
+                      AlternatingRowBackground="{DynamicResource AltSurfaceBrush}"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
+                      VerticalGridLinesBrush="{DynamicResource GridLineBrush}">
+
+                <DataGrid.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.ContainerStyle>
+                            <Style TargetType="{x:Type GroupItem}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type GroupItem}">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" 
+                                                           Foreground="Gray" FontSize="22"
+                                                           Background="{DynamicResource AppBackground}"
+                                                           Padding="6,4"/>
+                                                <ItemsPresenter/>
+                                            </StackPanel>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </GroupStyle.ContainerStyle>
+                    </GroupStyle>
+                </DataGrid.GroupStyle>
+
+                <DataGrid.Columns/>
+
+            </DataGrid>
     </Grid>
 </Window>
