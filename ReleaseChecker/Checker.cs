@@ -17,10 +17,12 @@ namespace ReleaseChecker
 
             if (videos.Count >= 2)
             {
+                MarkOutliers(videos, a => a.Title, (a, e) => a.TitleError = e);
                 MarkOutliers(videos, v => v.Format, (v, e) => v.FormatError = e);
                 MarkOutliers(videos, v => v.BitDepth, (v, e) => v.BitDepthError = e);
                 MarkOutliers(videos, v => v.FrameRateToString, (v, e) => v.FrameRateError = e);
                 MarkOutliers(videos, v => $"{v.Width}x{v.Height}", (v, e) => v.ResolutionError = e);
+                MarkBitrateOutliers(videos);
             }
 
             // Audio consistency per stream index
@@ -35,6 +37,8 @@ namespace ReleaseChecker
 
                 if (audios.Count >= 2)
                 {
+                    MarkOutliers(audios, a => a.Title, (a, e) => a.TitleError = e);
+                    MarkOutliers(audios, a => a.Language, (a, e) => a.LanguageError = e);
                     MarkOutliers(audios, a => a.Format, (a, e) => a.FormatError = e);
                     MarkOutliers(audios, a => a.ChannelsToString, (a, e) => a.ChannelsError = e);
                     MarkBitrateOutliers(audios);
@@ -53,6 +57,7 @@ namespace ReleaseChecker
 
                 if (subs.Count >= 2)
                 {
+                    MarkOutliers(subs, s => s.Language, (s, e) => s.LanguageError = e);
                     MarkOutliers(subs, s => s.Format, (s, e) => s.FormatError = e);
                 }
             }
@@ -69,16 +74,16 @@ namespace ReleaseChecker
                 setError(item, getValue(item) != mode);
         }
 
-        private static void MarkBitrateOutliers(List<AudioStreamInfo> audios)
+        private static void MarkBitrateOutliers<T>(List<T> streams) where T : CoreStreamInfo
         {
-            var parsed = audios
-                .Select(a => (Audio: a, Value: ParseBitrate(a.BitRate)))
+            var parsed = streams
+                .Select(a => (Stream: a, Value: ParseBitrate(a.BitRate)))
                 .Where(p => p.Value > 0)
                 .ToList();
 
             if (parsed.Count < 2)
             {
-                foreach (var a in audios) a.BitRateError = false;
+                foreach (var s in streams) s.BitRateError = 0;
                 return;
             }
 
@@ -86,7 +91,20 @@ namespace ReleaseChecker
             double median = sorted[sorted.Count / 2].Value;
 
             foreach (var p in parsed)
-                p.Audio.BitRateError = Math.Abs(p.Value - median) / median > 0.10;
+            {
+                if (Math.Abs(p.Value - median) / median > 0.5)
+                    p.Stream.BitRateError = 5;
+                else if (Math.Abs(p.Value - median) / median > 0.4)
+                    p.Stream.BitRateError = 4;
+                else if(Math.Abs(p.Value - median) / median > 0.3)
+                    p.Stream.BitRateError = 3;
+                else if (Math.Abs(p.Value - median) / median > 0.2)
+                    p.Stream.BitRateError = 2;
+                else if (Math.Abs(p.Value - median) / median > 0.1)
+                    p.Stream.BitRateError = 1;
+                else
+                    p.Stream.BitRateError = 0;
+            }    
         }
 
         private static double ParseBitrate(string br)

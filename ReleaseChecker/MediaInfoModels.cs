@@ -67,7 +67,7 @@ namespace ReleaseChecker
                     foreignSeen = true;
 
                 if (isRussian && foreignSeen)
-                    audio.LanguageError = true;
+                    audio.LanguageOrderError = true;
             }
         }
     }
@@ -78,6 +78,7 @@ namespace ReleaseChecker
         public StreamKind StreamKind { get; set; }
         public MediaFileInfo ParentFile { get; set; }
         public long StreamSizeBytes { get; set; }
+        public string BitRate { get; set; }
         public string Format { get; set; }
         public string Language { get; set; }
         public string Title { get; set; }
@@ -90,6 +91,7 @@ namespace ReleaseChecker
             StreamKind = kind;
             ParentFile = parent;
             StreamSizeBytes = MediaInfoReader.SafeGetLong(mi, kind, i, "StreamSize");
+            BitRate = MediaInfoReader.SafeGet(mi, kind, i, "BitRate/String");
             Format = MediaInfoReader.SafeGet(mi, kind, i, "Format");
             Language = MediaInfoReader.SafeGet(mi, kind, i, "Language/String");
             Title = MediaInfoReader.SafeGet(mi, kind, i, "Title");
@@ -97,6 +99,7 @@ namespace ReleaseChecker
             Forced = MediaInfoReader.SafeGetTag(mi, kind, i, "Forced");
         }
 
+        public string BitRateToString => NormalizeBitrate(BitRate);
         public string DefaultToString => Default ?? false ? "[x]" : "[ ]";
         public string ForcedToString => Forced ?? false ? "[x]" : "[ ]";
         public string Percentage => ParentFile.FileSizeBytes > 0 ? $"[{(int)(StreamSizeBytes * 100L / ParentFile.FileSizeBytes)}%]" : "[xx%]";
@@ -105,7 +108,9 @@ namespace ReleaseChecker
             (Default == false && Index == 0);
         public bool ForcedError => Forced == true;
         public bool LanguageError { get; set; }
+        public bool TitleError { get; set; }
         public bool FormatError { get; set; }
+        public int BitRateError { get; set; }
         protected string NormalizeBitrate(string br)
         {
             if (string.IsNullOrWhiteSpace(br)) return string.Empty;
@@ -127,7 +132,6 @@ namespace ReleaseChecker
         public string Height { get; set; }
         public string BitDepth { get; set; }
         public string FrameRate { get; set; }
-        public string BitRate { get; set; }
         public string Duration { get; set; }
         public string AspectRatio { get; set; }
 
@@ -137,7 +141,6 @@ namespace ReleaseChecker
             Width = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "Width");
             Height = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "Height");
             FrameRate = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "FrameRate/String");
-            BitRate = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "BitRate/String");
             Duration = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "Duration/String3");
             AspectRatio = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "DisplayAspectRatio/String");
             BitDepth = string.IsNullOrWhiteSpace(MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "BitDepth")) ?
@@ -164,14 +167,13 @@ namespace ReleaseChecker
             }
         }
         public string Resolution => $"{Width}x{Height}";
-        public string BitRateToString => NormalizeBitrate(BitRate);
         public string FormatToString => Format switch
         {
             "MPEG-4 Visual" => "XVID",
             _ => Format,
         };
 
-        public bool PercentageError => ParentFile.FileSizeBytes > 0 ? ((StreamSizeBytes * 100L / ParentFile.FileSizeBytes) < 50) : false;
+        public bool PercentageError => ParentFile.FileSizeBytes > 0 ? ((StreamSizeBytes * 100f / ParentFile.FileSizeBytes) < 50) : false;
         public bool BitDepthError { get; set; }
         public bool FrameRateError { get; set; }
         public bool ResolutionError { get; set; }
@@ -194,7 +196,6 @@ namespace ReleaseChecker
         public string Channels { get; set; }
         public string ChannelPositions { get; set; }
         public string SamplingRate { get; set; }
-        public string BitRate { get; set; }
         public string BitDepth { get; set; }
         public string Duration { get; set; }
 
@@ -206,7 +207,6 @@ namespace ReleaseChecker
             Channels = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "Channel(s)");
             ChannelPositions = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "ChannelLayout");
             SamplingRate = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "SamplingRate/String");
-            BitRate = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "BitRate/String");
             BitDepth = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "BitDepth");
             Duration = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "Duration/String3");
         }
@@ -236,7 +236,6 @@ namespace ReleaseChecker
                 return Channels;
             }
         }
-        public string BitRateToString => NormalizeBitrate(BitRate);
 
         public string FormatRewrittenWithLayer => Format switch
         {
@@ -258,9 +257,9 @@ namespace ReleaseChecker
             },
         };
 
-        public bool PercentageError => ParentFile.VideoStream?.StreamSizeBytes > 0 ? (StreamSizeBytes * 100L / ParentFile.VideoStream.StreamSizeBytes) > 33 : false;
+        public bool PercentageError => ParentFile.VideoStream?.StreamSizeBytes > 0 ? (StreamSizeBytes * 100f / ParentFile.VideoStream.StreamSizeBytes) > 33.333 : false;
         public bool ChannelsError { get; set; }
-        public bool BitRateError { get; set; }
+        public bool LanguageOrderError { get; set; }
 
         public new string ToString
         {
