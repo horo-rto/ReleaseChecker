@@ -1,7 +1,5 @@
 using MediaInfoLib;
 using System.Text.RegularExpressions;
-using System.Xml;
-using static MediaInfoLib.Options;
 
 namespace ReleaseChecker
 {

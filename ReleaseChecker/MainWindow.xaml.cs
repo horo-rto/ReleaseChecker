@@ -203,7 +203,7 @@ namespace ReleaseChecker
                 };
                 var mfi = entry.Mfi;
 
-                fr.Fields["FileName"] = entry.Rel;
+                fr.Fields["FileName"] = mfi.FileName;
                 if (mfi.VideoStream != null) fr.Fields["Video"] = mfi.VideoStream;
 
                 for (int a = 0; a < maxAudio; a++)
