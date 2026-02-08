@@ -119,6 +119,19 @@ namespace ReleaseChecker
             }
         }
 
+        private static readonly HashSet<string> SkipExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            // subs
+            ".srt", ".ass", ".ssa", ".sub", ".idx", ".sup", ".vtt", ".smi",
+            // fonts
+            ".ttf", ".otf", ".woff", ".woff2", ".eot", ".fon",
+            // common non-media
+            ".txt", ".nfo", ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".log"
+        };
+
+        private static bool ShouldSkip(string filePath) =>
+            SkipExtensions.Contains(IOPath.GetExtension(filePath));
+
         private List<(string Rel, MediaFileInfo Mfi)> ReadData(string[] paths, IProgress<(int current, int total)> progress, CancellationToken ct)
         {
             var analyzed = new List<(string Rel, MediaFileInfo Mfi)>();
@@ -127,14 +140,15 @@ namespace ReleaseChecker
             int total = 0;
             foreach (var path in paths)
             {
-                if (File.Exists(path)) total++;
-                if (Directory.Exists(path)) total += Directory.GetFiles(path, "*", SearchOption.AllDirectories).Length;
+                if (File.Exists(path) && !ShouldSkip(path)) total++;
+                if (Directory.Exists(path)) total += Directory.GetFiles(path, "*", SearchOption.AllDirectories).Count(f => !ShouldSkip(f));
             }
+            progress.Report((0, total));
 
             int current = 0;
             foreach (var path in paths)
             {
-                if (File.Exists(path))
+                if (File.Exists(path) && !ShouldSkip(path))
                 {
                     ct.ThrowIfCancellationRequested();
                     var rel = IOPath.GetFileName(path);
@@ -145,7 +159,7 @@ namespace ReleaseChecker
 
                 if (Directory.Exists(path))
                 {
-                    var files = Directory.GetFiles(path, "*", SearchOption.AllDirectories).OrderBy(f => f);
+                    var files = Directory.GetFiles(path, "*", SearchOption.AllDirectories).Where(f => !ShouldSkip(f)).OrderBy(f => f);
                     foreach (var file in files)
                     {
                         ct.ThrowIfCancellationRequested();
