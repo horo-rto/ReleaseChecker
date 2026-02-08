@@ -29,10 +29,7 @@ namespace ReleaseChecker
             if (mi.Open(filePath) == 0)
             {
                 mi.Close();
-                bool exists = System.IO.File.Exists(filePath);
-                long size = exists ? new System.IO.FileInfo(filePath).Length : -1;
-                string ver = mi.Option("Info_Version");
-                throw new Exception($"MediaInfo failed.\nPath: {filePath}\nExists: {exists}\nMI version: {ver}");
+                throw new Exception($"MediaInfo failed.");
             }
 
             FileSizeBytes = MediaInfoReader.SafeGetLong(mi, StreamKind.General, 0, "FileSize");

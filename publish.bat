@@ -1,4 +1,12 @@
 @echo off
+setlocal
+
+:: Read version from csproj
+for /f "usebackq tokens=*" %%a in (`powershell -NoProfile -Command "(Select-Xml -Path 'ReleaseChecker\ReleaseChecker.csproj' -XPath '//Version').Node.InnerText"`) do set VER=%%a
+
+echo Version: %VER%
+echo.
+
 echo === Building lightweight version (requires .NET 8) ===
 dotnet publish ReleaseChecker\ReleaseChecker.csproj -c Release -r win-x64 --no-self-contained -p:PublishSingleFile=true -o publish\tmp\lightweight
 echo.
@@ -8,8 +16,8 @@ dotnet publish ReleaseChecker\ReleaseChecker.csproj -c Release -r win-x64 --self
 echo.
 
 echo === Done ===
-copy /y publish\tmp\lightweight\ReleaseChecker.exe ReleaseChecker-light.exe
+copy /y publish\tmp\lightweight\ReleaseChecker.exe ReleaseChecker-%VER%-light.exe
 copy /y publish\tmp\lightweight\MediaInfo.dll MediaInfo.dll
-copy /y publish\tmp\portable\ReleaseChecker.exe ReleaseChecker-portable.exe
-rmdir /s /q publish\tmp
+copy /y publish\tmp\portable\ReleaseChecker.exe ReleaseChecker-%VER%-portable.exe
+rmdir /s /q publish
 pause
