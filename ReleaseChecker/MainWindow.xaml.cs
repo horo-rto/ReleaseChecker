@@ -72,6 +72,8 @@ namespace ReleaseChecker
             e.Handled = true;
         }
 
+        private CancellationTokenSource? _cts;
+
         private async void Window_Drop(object sender, DragEventArgs e)
         {
             try
@@ -79,6 +81,10 @@ namespace ReleaseChecker
                 if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
 
                 var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+                _cts?.Cancel();
+                _cts = new CancellationTokenSource();
+                var token = _cts.Token;
 
                 InfoPanel.Visibility = Visibility.Visible;
                 InfoProgress.Value = 0;
@@ -92,14 +98,13 @@ namespace ReleaseChecker
 
                 var data = await Task.Run(() =>
                 {
-                    var result = ReadData(paths, progress);
-                    //DumpJson(result);
+                    var result = ReadData(paths, progress, token);
 
                     foreach (var group in result.GroupBy(e => e.Mfi.FolderPath))
                         Checker.CheckConsistency(group.Select(e => e.Mfi).ToList());
 
                     return result;
-                });
+                }, token);
 
                 UpdateUI(data);
                 InfoPanel.Visibility = Visibility.Collapsed;
@@ -114,7 +119,7 @@ namespace ReleaseChecker
             }
         }
 
-        private List<(string Rel, MediaFileInfo Mfi)> ReadData(string[] paths, IProgress<(int current, int total)> progress)
+        private List<(string Rel, MediaFileInfo Mfi)> ReadData(string[] paths, IProgress<(int current, int total)> progress, CancellationToken ct)
         {
             var analyzed = new List<(string Rel, MediaFileInfo Mfi)>();
 
@@ -131,6 +136,7 @@ namespace ReleaseChecker
             {
                 if (File.Exists(path))
                 {
+                    ct.ThrowIfCancellationRequested();
                     var rel = IOPath.GetFileName(path);
                     var mfi = new MediaFileInfo(path);
                     analyzed.Add((rel, mfi));
@@ -142,6 +148,7 @@ namespace ReleaseChecker
                     var files = Directory.GetFiles(path, "*", SearchOption.AllDirectories).OrderBy(f => f);
                     foreach (var file in files)
                     {
+                        ct.ThrowIfCancellationRequested();
                         var rel = IOPath.GetRelativePath(path, file);
                         var mfi = new MediaFileInfo(file);
                         analyzed.Add((rel, mfi));
@@ -150,6 +157,13 @@ namespace ReleaseChecker
                 }
             }
             return analyzed;
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _cts?.Cancel();
+            base.OnClosed(e);
+            Environment.Exit(0);
         }
 
         private void DumpJson(List<(string Rel, MediaFileInfo Mfi)> data)
