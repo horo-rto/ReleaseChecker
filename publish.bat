@@ -16,8 +16,13 @@ dotnet publish ReleaseChecker\ReleaseChecker.csproj -c Release -r win-x64 --self
 echo.
 
 echo === Done ===
+echo.
+echo Copying ReleaseChecker-%VER%-light.exe
 copy /y publish\tmp\lightweight\ReleaseChecker.exe ReleaseChecker-%VER%-light.exe
 :: copy /y publish\tmp\lightweight\MediaInfo.dll MediaInfo.dll
+echo Copying ReleaseChecker-%VER%-portable.exe
 copy /y publish\tmp\portable\ReleaseChecker.exe ReleaseChecker-%VER%-portable.exe
 rmdir /s /q publish
+echo Copying ReleaseChecker-latest-light.exe
+copy /y ReleaseChecker-%VER%-light.exe ReleaseChecker-latest-light.exe
 pause
