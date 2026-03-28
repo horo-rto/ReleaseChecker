@@ -17,7 +17,7 @@ echo.
 
 echo === Done ===
 copy /y publish\tmp\lightweight\ReleaseChecker.exe ReleaseChecker-%VER%-light.exe
-copy /y publish\tmp\lightweight\MediaInfo.dll MediaInfo.dll
+:: copy /y publish\tmp\lightweight\MediaInfo.dll MediaInfo.dll
 copy /y publish\tmp\portable\ReleaseChecker.exe ReleaseChecker-%VER%-portable.exe
 rmdir /s /q publish
 pause
