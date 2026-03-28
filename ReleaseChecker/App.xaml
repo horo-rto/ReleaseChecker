@@ -26,6 +26,7 @@
             <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
             <Setter Property="Foreground" Value="{StaticResource AppForeground}"/>
             <Setter Property="BorderBrush" Value="{StaticResource GridLineBrush}"/>
+            <Setter Property="Padding" Value="6,3"/>
         </Style>
     </Application.Resources>
 </Application>

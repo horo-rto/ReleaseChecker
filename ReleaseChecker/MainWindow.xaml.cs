@@ -217,7 +217,12 @@ namespace ReleaseChecker
                 };
                 var mfi = entry.Mfi;
 
-                fr.Fields["FileName"] = mfi.FileName;
+                fr.Fields["FileName"] = new FileNameCellInfo
+                {
+                    FileName = mfi.FileName,
+                    IntegrityText = mfi.IntegrityText,
+                    IntegrityLevel = mfi.IntegrityLevel
+                };
                 if (mfi.VideoStream != null) fr.Fields["Video"] = mfi.VideoStream;
 
                 for (int a = 0; a < maxAudio; a++)
@@ -268,5 +273,12 @@ namespace ReleaseChecker
                 return string.Empty;
             }
         }
+    }
+
+    public class FileNameCellInfo
+    {
+        public required string FileName { get; set; }
+        public required string IntegrityText { get; set; }
+        public IntegrityLevel IntegrityLevel { get; set; }
     }
 }

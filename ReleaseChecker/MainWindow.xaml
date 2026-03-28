@@ -13,6 +13,32 @@
     FontSize="16"
     PreviewMouseWheel="Window_PreviewMouseWheel">
     <Window.Resources>
+        <DataTemplate DataType="{x:Type local:FileNameCellInfo}">
+            <StackPanel>
+                <TextBlock Text="{Binding FileName}"/>
+                <TextBlock Text="{Binding IntegrityText}" Margin="0,2,0,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="Gray"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IntegrityText}" Value="">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IntegrityLevel}" Value="1">
+                                    <Setter Property="Foreground" Value="#FFAA00"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IntegrityLevel}" Value="2">
+                                    <Setter Property="Foreground" Value="#FF0000"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+        </DataTemplate>
+
         <!-- Templates for Video/Audio objects -->
         <DataTemplate DataType="{x:Type local:VideoStreamInfo}">
             <StackPanel>
