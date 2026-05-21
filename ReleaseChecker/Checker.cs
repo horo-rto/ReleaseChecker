@@ -8,6 +8,8 @@ namespace ReleaseChecker
 {
     public static class Checker
     {
+        private const double AudioVideoDurationThresholdSeconds = 5;
+
         public static void CheckConsistency(List<MediaFileInfo> files)
         {
             if (files == null || files.Count < 2) return;
@@ -22,6 +24,7 @@ namespace ReleaseChecker
                 MarkOutliers(videos, v => v.BitDepth, (v, e) => v.BitDepthError = e);
                 MarkOutliers(videos, v => v.FrameRateToString, (v, e) => v.FrameRateError = e);
                 MarkOutliers(videos, v => $"{v.Width}x{v.Height}", (v, e) => v.ResolutionError = e);
+                MarkOutliers(videos, v => v.AspectRatio, (v, e) => v.AspectRatioError = e);
                 MarkBitrateOutliers(videos);
             }
 
@@ -59,6 +62,27 @@ namespace ReleaseChecker
                 {
                     MarkOutliers(subs, s => s.Language, (s, e) => s.LanguageError = e);
                     MarkOutliers(subs, s => s.Format, (s, e) => s.FormatError = e);
+                }
+            }
+        }
+
+        public static void MarkAudioVideoDurationErrors(List<MediaFileInfo> files)
+        {
+            foreach (var file in files)
+            {
+                if (file.AudioStreams == null || file.AudioStreams.Count == 0) continue;
+
+                var videoDurationSeconds = file.VideoStream?.DurationSeconds ?? 0;
+
+                foreach (var audio in file.AudioStreams)
+                {
+                    audio.DurationError = false;
+
+                    if (videoDurationSeconds <= 0 || audio.DurationSeconds <= 0)
+                        continue;
+
+                    audio.DurationDiff = (int)Math.Floor(Math.Abs(audio.DurationSeconds - videoDurationSeconds));
+                    audio.DurationError = audio.DurationDiff > AudioVideoDurationThresholdSeconds;
                 }
             }
         }

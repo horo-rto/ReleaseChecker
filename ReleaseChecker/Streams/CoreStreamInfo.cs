@@ -12,6 +12,9 @@ namespace ReleaseChecker
         public string Format { get; set; }
         public string Language { get; set; }
         public string Title { get; set; }
+        public string Duration { get; set; }
+        public long DurationMilliseconds { get; set; }
+        public long DelayMilliseconds { get; set; }
         public bool? Default { get; set; }
         public bool? Forced { get; set; }
 
@@ -25,6 +28,9 @@ namespace ReleaseChecker
             Format = MediaInfoReader.SafeGet(mi, kind, i, "Format");
             Language = MediaInfoReader.SafeGet(mi, kind, i, "Language/String");
             Title = MediaInfoReader.SafeGet(mi, kind, i, "Title");
+            Duration = MediaInfoReader.SafeGet(mi, kind, i, "Duration/String3");
+            DurationMilliseconds = MediaInfoReader.SafeGetLong(mi, kind, i, "Duration");
+            DelayMilliseconds = MediaInfoReader.SafeGetLong(mi, kind, i, "Delay");
             Default = MediaInfoReader.SafeGetTag(mi, kind, i, "Default");
             Forced = MediaInfoReader.SafeGetTag(mi, kind, i, "Forced");
         }
@@ -32,6 +38,7 @@ namespace ReleaseChecker
         public string BitRateToString => NormalizeBitrate(BitRate);
         public string DefaultToString => Default ?? false ? "[x]" : "[ ]";
         public string ForcedToString => Forced ?? false ? "[x]" : "[ ]";
+        public double DurationSeconds => DurationMilliseconds / 1000d;
         public string Percentage => ParentFile.FileSizeBytes > 0 ? $"[{(int)(StreamSizeBytes * 100L / ParentFile.FileSizeBytes)}%]" : "[xx%]";
         public bool DefaultError =>
             (Default == true && Index > 0) ||
@@ -41,6 +48,21 @@ namespace ReleaseChecker
         public bool TitleError { get; set; }
         public bool FormatError { get; set; }
         public int BitRateError { get; set; }
+        public int DelayError 
+        {
+            get
+            {
+                if (DelayMilliseconds == 0) return 0;
+
+                if (Language == "Japanese" || Language == "Chinese")
+                    if (DelayMilliseconds < 100)
+                        return 1;
+
+                return 2;
+            }
+        }
+
+            
 
         protected string NormalizeBitrate(string br)
         {
