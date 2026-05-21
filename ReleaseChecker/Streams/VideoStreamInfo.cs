@@ -46,6 +46,9 @@ namespace ReleaseChecker
         }
 
         public string Resolution => $"{Width}x{Height}";
+        public string ResolutionWithAspectRatio => string.IsNullOrWhiteSpace(AspectRatio)
+            ? Resolution
+            : $"{Resolution} ({AspectRatio})";
         public string FormatToString => Format switch
         {
             "MPEG-4 Visual" => "XVID",
@@ -56,6 +59,8 @@ namespace ReleaseChecker
         public bool BitDepthError { get; set; }
         public bool FrameRateError { get; set; }
         public bool ResolutionError { get; set; }
+        public bool AspectRatioError { get; set; }
+        public bool ResolutionOrAspectRatioError => ResolutionError || AspectRatioError;
 
         public new string ToString
         {

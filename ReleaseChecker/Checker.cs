@@ -22,6 +22,7 @@ namespace ReleaseChecker
                 MarkOutliers(videos, v => v.BitDepth, (v, e) => v.BitDepthError = e);
                 MarkOutliers(videos, v => v.FrameRateToString, (v, e) => v.FrameRateError = e);
                 MarkOutliers(videos, v => $"{v.Width}x{v.Height}", (v, e) => v.ResolutionError = e);
+                MarkOutliers(videos, v => v.AspectRatio, (v, e) => v.AspectRatioError = e);
                 MarkBitrateOutliers(videos);
             }
 

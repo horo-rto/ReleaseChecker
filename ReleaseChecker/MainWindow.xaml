@@ -110,12 +110,12 @@
                         </TextBlock.Style>
                     </TextBlock>
                     <TextBlock Text="; " Foreground="Gray"/>
-                    <TextBlock Text="{Binding Resolution}">
+                    <TextBlock Text="{Binding ResolutionWithAspectRatio}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="Gray"/>
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ResolutionError}" Value="True">
+                                    <DataTrigger Binding="{Binding ResolutionOrAspectRatioError}" Value="True">
                                         <Setter Property="Foreground" Value="Red"/>
                                         <Setter Property="FontWeight" Value="Bold"/>
                                     </DataTrigger>
