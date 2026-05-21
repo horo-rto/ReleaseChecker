@@ -100,8 +100,11 @@ namespace ReleaseChecker
                 {
                     var result = ReadData(paths, progress, token);
 
-                    foreach (var group in result.GroupBy(e => e.Mfi.FolderPath))
+                    Checker.MarkAudioVideoDurationErrors(result.Select(e => e.Mfi).ToList());
+
+                    foreach (var group in result.GroupBy(e => e.Mfi.FolderPath)) { 
                         Checker.CheckConsistency(group.Select(e => e.Mfi).ToList());
+                    }
 
                     return result;
                 }, token);

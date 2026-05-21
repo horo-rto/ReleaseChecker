@@ -11,7 +11,6 @@ namespace ReleaseChecker
         public string ChannelPositions { get; set; }
         public string SamplingRate { get; set; }
         public string BitDepth { get; set; }
-        public string Duration { get; set; }
 
         public AudioStreamInfo(MediaInfo mi, int i, MediaFileInfo parent) : base(mi, i, StreamKind.Audio, parent)
         {
@@ -22,7 +21,6 @@ namespace ReleaseChecker
             ChannelPositions = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "ChannelLayout");
             SamplingRate = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "SamplingRate/String");
             BitDepth = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "BitDepth");
-            Duration = MediaInfoReader.SafeGet(mi, StreamKind.Audio, i, "Duration/String3");
         }
 
         public string ChannelsToString
@@ -75,6 +73,8 @@ namespace ReleaseChecker
         public bool PercentageError => ParentFile.VideoStream?.StreamSizeBytes > 0 ? (StreamSizeBytes * 100f / ParentFile.VideoStream.StreamSizeBytes) > 33.333 : false;
         public bool ChannelsError { get; set; }
         public bool LanguageOrderError { get; set; }
+        public bool DurationError { get; set; }
+        public int DurationDiff { get; set; }
 
         public new string ToString
         {

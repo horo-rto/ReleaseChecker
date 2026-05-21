@@ -312,6 +312,20 @@
                         </TextBlock.Style>
                     </TextBlock>
                 </WrapPanel>
+                <WrapPanel>
+                    <TextBlock Text="{Binding DurationDiff, StringFormat=DURATION DIFF: {0} SEC}" Foreground="Red" FontWeight="Bold" Margin="0,2,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DurationError}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </WrapPanel>
             </StackPanel>
         </DataTemplate>
 
