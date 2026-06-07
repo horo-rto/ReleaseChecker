@@ -86,6 +86,74 @@ namespace ReleaseChecker
                 }
             }
         }
+        
+        public static void MarkSignsErrors(List<MediaFileInfo> files)
+        {
+            foreach (var file in files)
+            {
+                if (file.SubtitleStreams == null || file.SubtitleStreams.Count == 0) continue;
+
+                // ошибка, если есть саб "Надписи" и он не первый
+
+                var videoHasSigns = file.SubtitleStreams.Any(x => x.IsRussianSignsByTitle);
+
+                if (videoHasSigns)
+                {
+                    if (!file.SubtitleStreams[0].IsRussianSignsByTitle)
+                    {
+                        var russianSigns = file.SubtitleStreams
+                            .Where(s => s.Language.Contains("Russian", StringComparison.OrdinalIgnoreCase))
+                            .Where(s => s.Title.Contains("Надписи", StringComparison.OrdinalIgnoreCase) || s.Title.Contains("Sign", StringComparison.OrdinalIgnoreCase))
+                            .ToList();
+
+                        if (russianSigns.Count > 0)
+                            russianSigns[0].SignsError = true;
+                    }
+                }
+
+                // проверка длин строк
+
+                var russianSubtitles = file.SubtitleStreams
+                    .Where(s => s.Language.Contains("Russian", StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(s => s.Index)
+                    .ToList();
+
+                if (russianSubtitles.Count > 1)
+                {
+                    if (russianSubtitles[0].LineCount >= russianSubtitles[1].LineCount)
+                    {
+                        russianSubtitles[0].LineCountWarning = true;
+                        russianSubtitles[1].LineCountWarning = true;
+                    }
+                }
+
+                var englishSubtitles = file.SubtitleStreams
+                    .Where(s => s.Language.Contains("English", StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(s => s.Index)
+                    .ToList();
+
+                if (englishSubtitles.Count > 1)
+                {
+                    if (englishSubtitles[0].LineCount >= englishSubtitles[1].LineCount)
+                    {
+                        englishSubtitles[0].LineCountWarning = true;
+                        englishSubtitles[1].LineCountWarning = true;
+                    }
+                }
+
+                // строки саба с одним кол-вом строк
+
+                var duplicateLineCountGroups = file.SubtitleStreams
+                    .GroupBy(s => s.LineCount)
+                    .Where(g => g.Count() >= 2);
+
+                foreach (var group in duplicateLineCountGroups)
+                {
+                    foreach (var subtitle in group)
+                        subtitle.LineCountWarning = true;
+                }
+            }
+        }
 
         private static void MarkOutliers<T>(List<T> items, Func<T, string> getValue, Action<T, bool> setError)
         {
