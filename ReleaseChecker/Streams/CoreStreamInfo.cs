@@ -64,7 +64,7 @@ namespace ReleaseChecker
             }
         }
 
-            
+        public new string ToString() => $"{Index} {Language} {Title}";
 
         protected string NormalizeBitrate(string br)
         {
