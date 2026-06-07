@@ -391,7 +391,19 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                    <TextBlock Text="{Binding Title}" Margin="4,0,0,0"/>
+                    <TextBlock Text="{Binding Title}" Margin="4,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SignsError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </WrapPanel>
                 <WrapPanel>
                     <TextBlock Text="{Binding FormatToString}">
@@ -408,7 +420,19 @@
                         </TextBlock.Style>
                     </TextBlock>
                     <TextBlock Text="; " Foreground="Gray"/>
-                    <TextBlock Text="{Binding LineCount, StringFormat={}{0} lines}" Foreground="Gray"/>
+                    <TextBlock Text="{Binding LineCount, StringFormat={}{0} lines}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding LineCountWarning}" Value="True">
+                                        <Setter Property="Foreground" Value="#FFAA00"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </WrapPanel>
                 <WrapPanel>
                     <TextBlock Text="{Binding DelayMilliseconds, StringFormat=DELAY: {0} ms}" Foreground="Red" FontWeight="Bold" Margin="0,2,0,0">
@@ -418,6 +442,40 @@
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding DelayError}" Value="True">
                                         <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </WrapPanel>
+            </StackPanel>
+        </DataTemplate>
+        
+        <DataTemplate DataType="{x:Type local:MediaFileInfo}">
+            <StackPanel>
+                <WrapPanel>
+                    <TextBlock Text="{Binding MenuInfoToString}" Margin="4,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding MenuCount}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </WrapPanel>
+
+                <WrapPanel>
+                    <TextBlock Text="{Binding AttachmentsCount, StringFormat={}{0} attachments}" Margin="4,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding AttachmentsCount}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>

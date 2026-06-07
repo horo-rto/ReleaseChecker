@@ -33,6 +33,8 @@ namespace ReleaseChecker
             DelayMilliseconds = MediaInfoReader.SafeGetLong(mi, kind, i, "Delay");
             Default = MediaInfoReader.SafeGetTag(mi, kind, i, "Default");
             Forced = MediaInfoReader.SafeGetTag(mi, kind, i, "Forced");
+
+            if (Language == "") Language = "undefined";
         }
 
         public string BitRateToString => NormalizeBitrate(BitRate);
@@ -62,7 +64,7 @@ namespace ReleaseChecker
             }
         }
 
-            
+        public new string ToString() => $"{Index} {Language} {Title}";
 
         protected string NormalizeBitrate(string br)
         {

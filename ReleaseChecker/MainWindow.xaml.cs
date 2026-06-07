@@ -100,7 +100,10 @@ namespace ReleaseChecker
                 {
                     var result = ReadData(paths, progress, token);
 
+                    AlignStreams.Start(result.Select(e => e.Mfi).ToList());
+
                     Checker.MarkAudioVideoDurationErrors(result.Select(e => e.Mfi).ToList());
+                    Checker.MarkSignsErrors(result.Select(e => e.Mfi).ToList());
 
                     foreach (var group in result.GroupBy(e => e.Mfi.FolderPath)) { 
                         Checker.CheckConsistency(group.Select(e => e.Mfi).ToList());
@@ -211,6 +214,8 @@ namespace ReleaseChecker
             for (int s = 0; s < maxSubs; s++)
                 AddColumn(maxSubs == 1 ? "Sub" : $"Sub {s + 1}", $"Sub{s}");
 
+            AddColumn("Other", "Other");
+
             foreach (var entry in analyzed)
             {
                 var fr = new FileRow()
@@ -240,6 +245,8 @@ namespace ReleaseChecker
                         fr.Fields[$"Sub{s}"] = mfi.SubtitleStreams[s];
                 }
 
+                fr.Fields[$"Other"] = mfi;
+
                 _rows.Add(fr);
             }
         }
@@ -267,8 +274,8 @@ namespace ReleaseChecker
     {
         public required string FileName { get; set; }
         public required string FolderPath { get; set; }
-        public Dictionary<string, object> Fields { get; } = new Dictionary<string, object>();
-        public object this[string key]
+        public Dictionary<string, object?> Fields { get; } = new Dictionary<string, object?>();
+        public object? this[string key]
         {
             get
             {

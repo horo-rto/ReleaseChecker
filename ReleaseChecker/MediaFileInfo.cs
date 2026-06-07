@@ -11,12 +11,16 @@ namespace ReleaseChecker
         public string FileName => System.IO.Path.GetFileName(FilePath);
         public string FolderPath => System.IO.Path.GetDirectoryName(FilePath) ?? string.Empty;
         public long FileSizeBytes { get; set; }
+        public long MenuCount { get; private set; }
+        public long MenuElementsCount { get; private set; }
+        public string MenuInfoToString => $"{MenuCount} menu, {MenuElementsCount} chapters";
+        public int AttachmentsCount { get; private set; }
         public IntegrityLevel IntegrityLevel { get; private set; } = IntegrityLevel.Ok;
         public string IntegrityText { get; private set; } = string.Empty;
 
         public VideoStreamInfo? VideoStream;
-        public List<AudioStreamInfo> AudioStreams { get; } = new List<AudioStreamInfo>();
-        public List<SubtitleStreamInfo> SubtitleStreams { get; } = new List<SubtitleStreamInfo>();
+        public List<AudioStreamInfo?> AudioStreams { get; private set; } = new List<AudioStreamInfo?>();
+        public List<SubtitleStreamInfo?> SubtitleStreams { get; private set; } = new List<SubtitleStreamInfo?>();
 
         public MediaFileInfo(string filePath)
         {
@@ -49,6 +53,9 @@ namespace ReleaseChecker
                 SubtitleStreams.Add(new SubtitleStreamInfo(mi, i, this));
             }
 
+            ParseMenuAndItElementsCount(mi);
+            CountAttachments(mi);
+
             AnalyzeIntegrity(mi);
 
             mi.Close();
@@ -61,6 +68,9 @@ namespace ReleaseChecker
             bool foreignSeen = false;
             foreach (var audio in AudioStreams)
             {
+                if (audio == null)
+                    continue;
+
                 var lang = (audio.Language ?? "").Trim().ToLowerInvariant();
                 bool isRussian = lang.Contains("ru") || lang.Contains("рус");
 
@@ -94,6 +104,50 @@ namespace ReleaseChecker
                 IntegrityText = $"WARN | Warnings: {hasConformanceWarnings}";
                 return;
             }
+        }
+
+        private void ParseMenuAndItElementsCount(MediaInfo mi)
+        {
+            MenuCount = (long)mi.Count_Get(StreamKind.Menu);
+
+            if (MenuCount <= 0)
+                return;
+
+            MenuElementsCount = MediaInfoReader.SafeGetLong(mi, StreamKind.Menu, 0, "Count") - 101;
+        }
+
+        private void CountAttachments(MediaInfo mi)
+        {
+            string attachments = MediaInfoReader.SafeGet(mi, StreamKind.General, 0, "Attachments");
+            AttachmentsCount = attachments.Count(c => c == '/');
+        }
+
+        public List<T?> GetStreamList<T>() where T : CoreStreamInfo
+        {
+            if (typeof(T) == typeof(AudioStreamInfo))
+                return (List<T?>)(object)AudioStreams;
+
+            if (typeof(T) == typeof(SubtitleStreamInfo)) 
+                return (List<T?>)(object)SubtitleStreams;
+
+            throw new ArgumentException($"Неверный тип: {typeof(T).Name}");
+        }
+        
+        public void SetStreamList<T>(List<T?> list) where T : CoreStreamInfo
+        {
+            if (typeof(T) == typeof(AudioStreamInfo))
+            {
+                AudioStreams = (List<AudioStreamInfo?>)(object)list;
+                return;
+            }
+
+            if (typeof(T) == typeof(SubtitleStreamInfo))
+            {
+                SubtitleStreams = (List<SubtitleStreamInfo?>)(object)list;
+                return;
+            }
+
+            throw new ArgumentException($"Неверный тип: {typeof(T).Name}");
         }
     }
 

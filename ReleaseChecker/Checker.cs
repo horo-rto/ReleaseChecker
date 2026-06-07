@@ -36,6 +36,7 @@ namespace ReleaseChecker
                 var audios = files
                     .Where(f => f.AudioStreams != null && idx < f.AudioStreams.Count)
                     .Select(f => f.AudioStreams[idx])
+                    .OfType<AudioStreamInfo>()
                     .ToList();
 
                 if (audios.Count >= 2)
@@ -56,6 +57,7 @@ namespace ReleaseChecker
                 var subs = files
                     .Where(f => f.SubtitleStreams != null && idx < f.SubtitleStreams.Count)
                     .Select(f => f.SubtitleStreams[idx])
+                    .OfType<SubtitleStreamInfo>()
                     .ToList();
 
                 if (subs.Count >= 2)
@@ -76,6 +78,9 @@ namespace ReleaseChecker
 
                 foreach (var audio in file.AudioStreams)
                 {
+                    if (audio == null)
+                        continue;
+
                     audio.DurationError = false;
 
                     if (videoDurationSeconds <= 0 || audio.DurationSeconds <= 0)
@@ -83,6 +88,80 @@ namespace ReleaseChecker
 
                     audio.DurationDiff = (int)Math.Floor(Math.Abs(audio.DurationSeconds - videoDurationSeconds));
                     audio.DurationError = audio.DurationDiff > AudioVideoDurationThresholdSeconds;
+                }
+            }
+        }
+        
+        public static void MarkSignsErrors(List<MediaFileInfo> files)
+        {
+            foreach (var file in files)
+            {
+                if (file.SubtitleStreams == null || file.SubtitleStreams.Count == 0) continue;
+
+                // ошибка, если есть саб "Надписи" и он не первый
+
+                var videoHasSigns = file.SubtitleStreams
+                    .OfType<SubtitleStreamInfo>()
+                    .Any(x => x.IsRussianSignsByTitle);
+
+                if (videoHasSigns)
+                {
+                    if (!(file.SubtitleStreams[0]?.IsRussianSignsByTitle ?? false))
+                    {
+                        var russianSigns = file.SubtitleStreams
+                            .OfType<SubtitleStreamInfo>()
+                            .Where(s => s?.Language.Contains("Russian", StringComparison.OrdinalIgnoreCase) ?? false)
+                            .Where(s => s.Title.Contains("Надписи", StringComparison.OrdinalIgnoreCase) || s.Title.Contains("Sign", StringComparison.OrdinalIgnoreCase))
+                            .ToList();
+
+                        if (russianSigns.Count > 0)
+                            russianSigns[0].SignsError = true;
+                    }
+                }
+
+                // проверка длин строк
+
+                var russianSubtitles = file.SubtitleStreams
+                    .OfType<SubtitleStreamInfo>()
+                    .Where(stream => stream.Language.Contains("Russian", StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(stream => stream.Index)
+                    .ToList();
+
+                if (russianSubtitles.Count > 1)
+                {
+                    if (russianSubtitles[0].LineCount >= russianSubtitles[1].LineCount)
+                    {
+                        russianSubtitles[0].LineCountWarning = true;
+                        russianSubtitles[1].LineCountWarning = true;
+                    }
+                }
+
+                var englishSubtitles = file.SubtitleStreams
+                    .OfType<SubtitleStreamInfo>()
+                    .Where(s => s?.Language.Contains("English", StringComparison.OrdinalIgnoreCase) ?? false)
+                    .OrderBy(s => s.Index)
+                    .ToList();
+
+                if (englishSubtitles.Count > 1)
+                {
+                    if (englishSubtitles[0].LineCount >= englishSubtitles[1].LineCount)
+                    {
+                        englishSubtitles[0].LineCountWarning = true;
+                        englishSubtitles[1].LineCountWarning = true;
+                    }
+                }
+
+                // строки саба с одним кол-вом строк
+
+                var duplicateLineCountGroups = file.SubtitleStreams
+                    .OfType<SubtitleStreamInfo>()
+                    .GroupBy(s => s?.LineCount)
+                    .Where(g => g.Count() >= 2);
+
+                foreach (var group in duplicateLineCountGroups)
+                {
+                    foreach (var subtitle in group)
+                        subtitle.LineCountWarning = true;
                 }
             }
         }
