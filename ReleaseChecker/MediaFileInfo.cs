@@ -11,6 +11,10 @@ namespace ReleaseChecker
         public string FileName => System.IO.Path.GetFileName(FilePath);
         public string FolderPath => System.IO.Path.GetDirectoryName(FilePath) ?? string.Empty;
         public long FileSizeBytes { get; set; }
+        public long MenuCount { get; private set; }
+        public long MenuElementsCount { get; private set; }
+        public string MenuInfoToString => $"{MenuCount} menu, {MenuElementsCount} chapters";
+        public int AttachmentsCount { get; private set; }
         public IntegrityLevel IntegrityLevel { get; private set; } = IntegrityLevel.Ok;
         public string IntegrityText { get; private set; } = string.Empty;
 
@@ -48,6 +52,9 @@ namespace ReleaseChecker
             {
                 SubtitleStreams.Add(new SubtitleStreamInfo(mi, i, this));
             }
+
+            ParseMenuAndItElementsCount(mi);
+            CountAttachments(mi);
 
             AnalyzeIntegrity(mi);
 
@@ -97,6 +104,22 @@ namespace ReleaseChecker
                 IntegrityText = $"WARN | Warnings: {hasConformanceWarnings}";
                 return;
             }
+        }
+
+        private void ParseMenuAndItElementsCount(MediaInfo mi)
+        {
+            MenuCount = (long)mi.Count_Get(StreamKind.Menu);
+
+            if (MenuCount <= 0)
+                return;
+
+            MenuElementsCount = MediaInfoReader.SafeGetLong(mi, StreamKind.Menu, 0, "Count") - 101;
+        }
+
+        private void CountAttachments(MediaInfo mi)
+        {
+            string attachments = MediaInfoReader.SafeGet(mi, StreamKind.General, 0, "Attachments");
+            AttachmentsCount = attachments.Count(c => c == '/');
         }
 
         public List<T?> GetStreamList<T>() where T : CoreStreamInfo

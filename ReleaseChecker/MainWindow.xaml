@@ -450,6 +450,40 @@
                 </WrapPanel>
             </StackPanel>
         </DataTemplate>
+        
+        <DataTemplate DataType="{x:Type local:MediaFileInfo}">
+            <StackPanel>
+                <WrapPanel>
+                    <TextBlock Text="{Binding MenuInfoToString}" Margin="4,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding MenuCount}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </WrapPanel>
+
+                <WrapPanel>
+                    <TextBlock Text="{Binding AttachmentsCount, StringFormat={}{0} attachments}" Margin="4,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding AttachmentsCount}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </WrapPanel>
+            </StackPanel>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop">

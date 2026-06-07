@@ -214,6 +214,8 @@ namespace ReleaseChecker
             for (int s = 0; s < maxSubs; s++)
                 AddColumn(maxSubs == 1 ? "Sub" : $"Sub {s + 1}", $"Sub{s}");
 
+            AddColumn("Other", "Other");
+
             foreach (var entry in analyzed)
             {
                 var fr = new FileRow()
@@ -242,6 +244,8 @@ namespace ReleaseChecker
                     if (mfi?.SubtitleStreams != null && s < mfi.SubtitleStreams.Count)
                         fr.Fields[$"Sub{s}"] = mfi.SubtitleStreams[s];
                 }
+
+                fr.Fields[$"Other"] = mfi;
 
                 _rows.Add(fr);
             }
