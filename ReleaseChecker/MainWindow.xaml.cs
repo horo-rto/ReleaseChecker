@@ -100,6 +100,8 @@ namespace ReleaseChecker
                 {
                     var result = ReadData(paths, progress, token);
 
+                    AlignStreams.Analyze(result.Select(e => e.Mfi).ToList());
+
                     Checker.MarkAudioVideoDurationErrors(result.Select(e => e.Mfi).ToList());
                     Checker.MarkSignsErrors(result.Select(e => e.Mfi).ToList());
 

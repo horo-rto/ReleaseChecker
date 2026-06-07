@@ -36,6 +36,7 @@ namespace ReleaseChecker
                 var audios = files
                     .Where(f => f.AudioStreams != null && idx < f.AudioStreams.Count)
                     .Select(f => f.AudioStreams[idx])
+                    .Where(stream => stream != null)
                     .ToList();
 
                 if (audios.Count >= 2)
@@ -56,6 +57,7 @@ namespace ReleaseChecker
                 var subs = files
                     .Where(f => f.SubtitleStreams != null && idx < f.SubtitleStreams.Count)
                     .Select(f => f.SubtitleStreams[idx])
+                    .Where(stream => stream != null)
                     .ToList();
 
                 if (subs.Count >= 2)
@@ -76,6 +78,9 @@ namespace ReleaseChecker
 
                 foreach (var audio in file.AudioStreams)
                 {
+                    if (audio == null)
+                        continue;
+
                     audio.DurationError = false;
 
                     if (videoDurationSeconds <= 0 || audio.DurationSeconds <= 0)
@@ -95,14 +100,14 @@ namespace ReleaseChecker
 
                 // ошибка, если есть саб "Надписи" и он не первый
 
-                var videoHasSigns = file.SubtitleStreams.Any(x => x.IsRussianSignsByTitle);
+                var videoHasSigns = file.SubtitleStreams.Any(x => x?.IsRussianSignsByTitle ?? false);
 
                 if (videoHasSigns)
                 {
                     if (!file.SubtitleStreams[0].IsRussianSignsByTitle)
                     {
                         var russianSigns = file.SubtitleStreams
-                            .Where(s => s.Language.Contains("Russian", StringComparison.OrdinalIgnoreCase))
+                            .Where(s => s?.Language.Contains("Russian", StringComparison.OrdinalIgnoreCase) ?? false)
                             .Where(s => s.Title.Contains("Надписи", StringComparison.OrdinalIgnoreCase) || s.Title.Contains("Sign", StringComparison.OrdinalIgnoreCase))
                             .ToList();
 
@@ -114,7 +119,7 @@ namespace ReleaseChecker
                 // проверка длин строк
 
                 var russianSubtitles = file.SubtitleStreams
-                    .Where(s => s.Language.Contains("Russian", StringComparison.OrdinalIgnoreCase))
+                    .Where(s => s?.Language.Contains("Russian", StringComparison.OrdinalIgnoreCase) ?? false)
                     .OrderBy(s => s.Index)
                     .ToList();
 
@@ -128,7 +133,7 @@ namespace ReleaseChecker
                 }
 
                 var englishSubtitles = file.SubtitleStreams
-                    .Where(s => s.Language.Contains("English", StringComparison.OrdinalIgnoreCase))
+                    .Where(s => s?.Language.Contains("English", StringComparison.OrdinalIgnoreCase) ?? false)
                     .OrderBy(s => s.Index)
                     .ToList();
 
@@ -144,7 +149,7 @@ namespace ReleaseChecker
                 // строки саба с одним кол-вом строк
 
                 var duplicateLineCountGroups = file.SubtitleStreams
-                    .GroupBy(s => s.LineCount)
+                    .GroupBy(s => s?.LineCount)
                     .Where(g => g.Count() >= 2);
 
                 foreach (var group in duplicateLineCountGroups)
