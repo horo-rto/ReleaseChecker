@@ -15,8 +15,8 @@ namespace ReleaseChecker
         public string IntegrityText { get; private set; } = string.Empty;
 
         public VideoStreamInfo? VideoStream;
-        public List<AudioStreamInfo> AudioStreams { get; private set; } = new List<AudioStreamInfo>();
-        public List<SubtitleStreamInfo> SubtitleStreams { get; private set; } = new List<SubtitleStreamInfo>();
+        public List<AudioStreamInfo?> AudioStreams { get; private set; } = new List<AudioStreamInfo?>();
+        public List<SubtitleStreamInfo?> SubtitleStreams { get; private set; } = new List<SubtitleStreamInfo?>();
 
         public MediaFileInfo(string filePath)
         {
@@ -99,28 +99,28 @@ namespace ReleaseChecker
             }
         }
 
-        public List<T> GetStreamList<T>() where T : CoreStreamInfo
+        public List<T?> GetStreamList<T>() where T : CoreStreamInfo
         {
             if (typeof(T) == typeof(AudioStreamInfo))
-                return (List<T>)(object)AudioStreams;
+                return (List<T?>)(object)AudioStreams;
 
             if (typeof(T) == typeof(SubtitleStreamInfo)) 
-                return (List<T>)(object)SubtitleStreams;
+                return (List<T?>)(object)SubtitleStreams;
 
             throw new ArgumentException($"Неверный тип: {typeof(T).Name}");
         }
         
-        public void SetStreamList<T>(List<T> list) where T : CoreStreamInfo
+        public void SetStreamList<T>(List<T?> list) where T : CoreStreamInfo
         {
             if (typeof(T) == typeof(AudioStreamInfo))
             {
-                AudioStreams = (List<AudioStreamInfo>)(object)list;
+                AudioStreams = (List<AudioStreamInfo?>)(object)list;
                 return;
             }
 
             if (typeof(T) == typeof(SubtitleStreamInfo))
             {
-                SubtitleStreams = (List<SubtitleStreamInfo>)(object)list;
+                SubtitleStreams = (List<SubtitleStreamInfo?>)(object)list;
                 return;
             }
 

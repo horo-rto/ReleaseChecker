@@ -100,7 +100,7 @@ namespace ReleaseChecker
                 {
                     var result = ReadData(paths, progress, token);
 
-                    AlignStreams.Analyze(result.Select(e => e.Mfi).ToList());
+                    AlignStreams.Start(result.Select(e => e.Mfi).ToList());
 
                     Checker.MarkAudioVideoDurationErrors(result.Select(e => e.Mfi).ToList());
                     Checker.MarkSignsErrors(result.Select(e => e.Mfi).ToList());
@@ -270,8 +270,8 @@ namespace ReleaseChecker
     {
         public required string FileName { get; set; }
         public required string FolderPath { get; set; }
-        public Dictionary<string, object> Fields { get; } = new Dictionary<string, object>();
-        public object this[string key]
+        public Dictionary<string, object?> Fields { get; } = new Dictionary<string, object?>();
+        public object? this[string key]
         {
             get
             {
