@@ -137,6 +137,18 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
+                    <TextBlock Text="{Binding FrameRateMode, StringFormat={} ({0})}" Foreground="Gray">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FrameRateMode}" Value="VFR">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                     <TextBlock Text="; " Foreground="Gray"/>
                     <TextBlock Text="{Binding BitRateToString}">
                         <TextBlock.Style>
@@ -162,6 +174,20 @@
                                     <DataTrigger Binding="{Binding BitRateError}" Value="5">
                                         <Setter Property="Foreground" Value="#FF0000"/>
                                         <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </WrapPanel>
+                <WrapPanel>
+                    <TextBlock Text="{Binding DelayMilliseconds, StringFormat=DELAY: {0} ms}" Foreground="Red" FontWeight="Bold" Margin="0,2,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DelayMilliseconds}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -438,10 +464,10 @@
                     <TextBlock Text="{Binding DelayMilliseconds, StringFormat=DELAY: {0} ms}" Foreground="Red" FontWeight="Bold" Margin="0,2,0,0">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
-                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Setter Property="Visibility" Value="Visible"/>
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding DelayError}" Value="True">
-                                        <Setter Property="Visibility" Value="Visible"/>
+                                    <DataTrigger Binding="{Binding DelayMilliseconds}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
