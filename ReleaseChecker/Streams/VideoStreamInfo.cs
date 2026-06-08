@@ -10,6 +10,7 @@ namespace ReleaseChecker
         public string Height { get; set; }
         public string BitDepth { get; set; }
         public string FrameRate { get; set; }
+        public string FrameRateMode { get; set; }
         public string AspectRatio { get; set; }
 
         public VideoStreamInfo(MediaInfo mi, int i, MediaFileInfo parent) : base(mi, i, StreamKind.Video, parent)
@@ -18,6 +19,7 @@ namespace ReleaseChecker
             Width = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "Width");
             Height = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "Height");
             FrameRate = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "FrameRate/String");
+            FrameRateMode = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "FrameRate_Mode");
             AspectRatio = MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "DisplayAspectRatio/String");
             BitDepth = string.IsNullOrWhiteSpace(MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "BitDepth"))
                 ? MediaInfoReader.SafeGet(mi, StreamKind.Video, i, "Bit depth")
