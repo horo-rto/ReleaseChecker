@@ -152,7 +152,7 @@ namespace ReleaseChecker
 
                 var duplicateLineCountGroups = file.SubtitleStreams
                     .OfType<SubtitleStreamInfo>()
-                    .GroupBy(s => s?.LineCount)
+                    .GroupBy(s => new { s?.Language, s?.LineCount })
                     .Where(g => g.Count() >= 2);
 
                 foreach (var group in duplicateLineCountGroups)
