@@ -180,6 +180,20 @@
                         </TextBlock.Style>
                     </TextBlock>
                 </WrapPanel>
+                <WrapPanel>
+                    <TextBlock Text="{Binding DelayMilliseconds, StringFormat=DELAY: {0} ms}" Foreground="Red" FontWeight="Bold" Margin="0,2,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DelayMilliseconds}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </WrapPanel>
             </StackPanel>
         </DataTemplate>
 
@@ -450,10 +464,10 @@
                     <TextBlock Text="{Binding DelayMilliseconds, StringFormat=DELAY: {0} ms}" Foreground="Red" FontWeight="Bold" Margin="0,2,0,0">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
-                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Setter Property="Visibility" Value="Visible"/>
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding DelayError}" Value="True">
-                                        <Setter Property="Visibility" Value="Visible"/>
+                                    <DataTrigger Binding="{Binding DelayMilliseconds}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
