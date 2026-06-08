@@ -108,7 +108,9 @@ namespace ReleaseChecker
                         var russianSigns = file.SubtitleStreams
                             .OfType<SubtitleStreamInfo>()
                             .Where(s => s?.Language.Contains("Russian", StringComparison.OrdinalIgnoreCase) ?? false)
-                            .Where(s => s.Title.Contains("Надписи", StringComparison.OrdinalIgnoreCase) || s.Title.Contains("Sign", StringComparison.OrdinalIgnoreCase))
+                            .Where(s => s.Title.Contains("Надписи", StringComparison.OrdinalIgnoreCase) ||
+                                        s.Title.Contains("Sign", StringComparison.OrdinalIgnoreCase) ||
+                                        s.Title.Contains("Forced", StringComparison.OrdinalIgnoreCase))
                             .ToList();
 
                         if (russianSigns.Count > 0)
