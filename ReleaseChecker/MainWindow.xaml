@@ -80,7 +80,18 @@
                         </TextBlock.Style>
                     </TextBlock>
                     <TextBlock Text="{Binding Language}" Margin="4,0,0,0"/>
-                    <TextBlock Text="{Binding Title}" Margin="4,0,0,0"/>
+                    <TextBlock Text="{Binding Title}" Margin="4,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TitleError}" Value="True">
+                                        <Setter Property="Foreground" Value="Red"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </WrapPanel>
                 <WrapPanel>
                     <TextBlock Text="{Binding FormatToString}">

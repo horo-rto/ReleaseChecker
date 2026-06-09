@@ -59,6 +59,7 @@ namespace ReleaseChecker
 
                 if (subs.Count >= 2)
                 {
+                    MarkOutliers(subs, s => s.Title, (s, e) => s.LanguageError = e);
                     MarkOutliers(subs, s => s.Language, (s, e) => s.LanguageError = e);
                     MarkOutliers(subs, s => s.Format, (s, e) => s.FormatError = e);
                 }
