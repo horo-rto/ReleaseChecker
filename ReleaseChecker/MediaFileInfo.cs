@@ -129,7 +129,9 @@ namespace ReleaseChecker
             if (MenuCount <= 0)
                 return;
 
-            MenuElementsCount = MediaInfoReader.SafeGetLong(mi, StreamKind.Menu, 0, "Count") - 101;
+            MenuElementsCount = 
+                MediaInfoReader.SafeGetLong(mi, StreamKind.Menu, 0, "Chapters_Pos_End") - 
+                MediaInfoReader.SafeGetLong(mi, StreamKind.Menu, 0, "Chapters_Pos_Begin");
         }
 
         private void CountAttachments(MediaInfo mi)
