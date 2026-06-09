@@ -10,7 +10,7 @@
     SizeToContent="Width" WindowStartupLocation="CenterScreen" 
     Background="{DynamicResource AppBackground}" 
     Foreground="{DynamicResource AppForeground}"
-    FontSize="16"
+    FontSize="16" KeyDown="Window_KeyDown"
     PreviewMouseWheel="Window_PreviewMouseWheel">
     <Window.Resources>
         <DataTemplate DataType="{x:Type local:FileNameCellInfo}">
