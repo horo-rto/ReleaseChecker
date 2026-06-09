@@ -132,7 +132,7 @@ namespace ReleaseChecker
             // fonts
             ".ttf", ".otf", ".woff", ".woff2", ".eot", ".fon",
             // common non-media
-            ".txt", ".nfo", ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".log"
+            ".txt", ".nfo", ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".log", ".ignore"
         };
 
         private static bool ShouldSkip(string filePath) =>
