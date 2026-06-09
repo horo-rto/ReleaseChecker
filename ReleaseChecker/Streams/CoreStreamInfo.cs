@@ -47,6 +47,7 @@ namespace ReleaseChecker
             (Default == false && Index == 0);
         public bool ForcedError => Forced == true;
         public bool LanguageError { get; set; }
+        public bool LanguageOrderError { get; set; }
         public bool TitleError { get; set; }
         public bool FormatError { get; set; }
         public int BitRateError { get; set; }

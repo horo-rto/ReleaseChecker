@@ -1,5 +1,6 @@
 ﻿using MediaInfoLib;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -49,6 +50,13 @@ namespace ReleaseChecker
                 ErrorPanel.Visibility = Visibility.Visible;
                 ErrorText.Text = $"MediaInfo.dll not found. Place MediaInfo.dll next to the executable.\nExpected path: {AppContext.BaseDirectory}";
             }
+
+            string[] args = Environment.GetCommandLineArgs();
+
+            if (args.Length > 1)
+            {
+                ReadFilesAndUpdateUI(args[1..]);
+            }
         }
 
         private void Window_DragOver(object sender, DragEventArgs e)
@@ -72,15 +80,42 @@ namespace ReleaseChecker
             e.Handled = true;
         }
 
+        private void Window_Drop(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+
+            var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+            ReadFilesAndUpdateUI(paths);
+
+            e.Handled = true;
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.V)
+            {
+                if (Clipboard.ContainsFileDropList())
+                {
+                    e.Handled = true;
+
+                    StringCollection paths = Clipboard.GetFileDropList();
+                    ReadFilesAndUpdateUI(paths.Cast<string>().ToArray());
+                }
+                else if (Clipboard.ContainsText())
+                {
+                    ReadFilesAndUpdateUI([Clipboard.GetText()]);
+                }
+            }
+        }
+
         private CancellationTokenSource? _cts;
 
-        private async void Window_Drop(object sender, DragEventArgs e)
+        private async void ReadFilesAndUpdateUI(string[] paths)
         {
             try
             {
-                if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
-
-                var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
+                Array.Sort(paths);
 
                 _cts?.Cancel();
                 _cts = new CancellationTokenSource();
@@ -105,7 +140,8 @@ namespace ReleaseChecker
                     Checker.MarkAudioVideoDurationErrors(result.Select(e => e.Mfi).ToList());
                     Checker.MarkSignsErrors(result.Select(e => e.Mfi).ToList());
 
-                    foreach (var group in result.GroupBy(e => e.Mfi.FolderPath)) { 
+                    foreach (var group in result.GroupBy(e => e.Mfi.FolderPath))
+                    {
                         Checker.CheckConsistency(group.Select(e => e.Mfi).ToList());
                     }
 
@@ -114,8 +150,6 @@ namespace ReleaseChecker
 
                 UpdateUI(data);
                 InfoPanel.Visibility = Visibility.Collapsed;
-
-                e.Handled = true;
             }
             catch (Exception ex)
             {
@@ -132,7 +166,7 @@ namespace ReleaseChecker
             // fonts
             ".ttf", ".otf", ".woff", ".woff2", ".eot", ".fon",
             // common non-media
-            ".txt", ".nfo", ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".log"
+            ".txt", ".nfo", ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".log", ".ignore"
         };
 
         private static bool ShouldSkip(string filePath) =>
@@ -142,13 +176,23 @@ namespace ReleaseChecker
         {
             var analyzed = new List<(string Rel, MediaFileInfo Mfi)>();
 
-            // Count total files first
+            var options = new EnumerationOptions
+            {
+                IgnoreInaccessible = true,
+                RecurseSubdirectories = true,
+                AttributesToSkip = FileAttributes.Hidden | FileAttributes.System
+            };
+
             int total = 0;
             foreach (var path in paths)
             {
-                if (File.Exists(path) && !ShouldSkip(path)) total++;
-                if (Directory.Exists(path)) total += Directory.GetFiles(path, "*", SearchOption.AllDirectories).Count(f => !ShouldSkip(f));
+                if (File.Exists(path) && !ShouldSkip(path))
+                    total++;
+
+                if (Directory.Exists(path))
+                    total += Directory.EnumerateFiles(path, "*", options).Count(f => !ShouldSkip(f));
             }
+
             progress.Report((0, total));
 
             int current = 0;
@@ -165,7 +209,8 @@ namespace ReleaseChecker
 
                 if (Directory.Exists(path))
                 {
-                    var files = Directory.GetFiles(path, "*", SearchOption.AllDirectories).Where(f => !ShouldSkip(f)).OrderBy(f => f);
+                    var files = Directory.EnumerateFiles(path, "*", options).Where(f => !ShouldSkip(f)).OrderBy(f => f);
+
                     foreach (var file in files)
                     {
                         ct.ThrowIfCancellationRequested();
@@ -176,6 +221,7 @@ namespace ReleaseChecker
                     }
                 }
             }
+
             return analyzed;
         }
 
