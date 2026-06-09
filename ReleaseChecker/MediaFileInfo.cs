@@ -80,6 +80,22 @@ namespace ReleaseChecker
                 if (isRussian && foreignSeen)
                     audio.LanguageOrderError = true;
             }
+
+            foreignSeen = false;
+            foreach (var subtitle in SubtitleStreams)
+            {
+                if (subtitle == null)
+                    continue;
+
+                var lang = (subtitle.Language ?? "").Trim().ToLowerInvariant();
+                bool isRussian = lang.Contains("ru") || lang.Contains("рус");
+
+                if (!isRussian && !string.IsNullOrEmpty(lang))
+                    foreignSeen = true;
+
+                if (isRussian && foreignSeen)
+                    subtitle.LanguageOrderError = true;
+            }
         }
 
         private void AnalyzeIntegrity(MediaInfo mi)

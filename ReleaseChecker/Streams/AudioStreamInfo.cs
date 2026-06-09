@@ -72,7 +72,6 @@ namespace ReleaseChecker
 
         public bool PercentageError => ParentFile.VideoStream?.StreamSizeBytes > 0 ? (StreamSizeBytes * 100f / ParentFile.VideoStream.StreamSizeBytes) > 33.333 : false;
         public bool ChannelsError { get; set; }
-        public bool LanguageOrderError { get; set; }
         public bool DurationError { get; set; }
         public int DurationDiff { get; set; }
 
