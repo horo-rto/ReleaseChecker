@@ -81,6 +81,8 @@ namespace ReleaseChecker
                 if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
 
                 var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
+                
+                Array.Sort(paths);
 
                 _cts?.Cancel();
                 _cts = new CancellationTokenSource();
@@ -105,7 +107,8 @@ namespace ReleaseChecker
                     Checker.MarkAudioVideoDurationErrors(result.Select(e => e.Mfi).ToList());
                     Checker.MarkSignsErrors(result.Select(e => e.Mfi).ToList());
 
-                    foreach (var group in result.GroupBy(e => e.Mfi.FolderPath)) { 
+                    foreach (var group in result.GroupBy(e => e.Mfi.FolderPath))
+                    {
                         Checker.CheckConsistency(group.Select(e => e.Mfi).ToList());
                     }
 
