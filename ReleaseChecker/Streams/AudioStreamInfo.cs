@@ -54,14 +54,14 @@ namespace ReleaseChecker
             "MPEG Audio" => "MP" + FormatProfile.Replace("Layer ", ""),
             "AAC" => "AAC" + (string.IsNullOrEmpty(FormatProfile) ? "" : " " + FormatProfile),
             "MLP FBA" => "Dolby TrueHD",
-            "DTS XLL" => "DHS-HD MA",
+            "DTS XLL" => "DTS-HD MA",
             _ => Format,
         };
 
         public string FormatToString => AdditionalFeatures switch
         {
             "" => FormatRewrittenWithLayer,
-            "XLL" => "DHS-HD MA",
+            "XLL" => "DTS-HD MA",
             "JOC" => FormatRewrittenWithLayer + " Atmos",
             _ => NumberOfDynamicObjects switch
             {

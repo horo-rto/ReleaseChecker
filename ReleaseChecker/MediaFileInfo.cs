@@ -137,7 +137,9 @@ namespace ReleaseChecker
         private void CountAttachments(MediaInfo mi)
         {
             string attachments = MediaInfoReader.SafeGet(mi, StreamKind.General, 0, "Attachments");
-            AttachmentsCount = attachments.Count(c => c == '/');
+
+            if (attachments != "")
+                AttachmentsCount = attachments.Count(c => c == '/') + 1;
         }
 
         public List<T?> GetStreamList<T>() where T : CoreStreamInfo
