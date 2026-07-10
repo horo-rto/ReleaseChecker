@@ -4,11 +4,12 @@ namespace ReleaseChecker
 {
     public class SubtitleStreamInfo : CoreStreamInfo
     {
-        public long LineCount { get; set; }
+        public long LineCount { get; set; } = -1;
 
         public SubtitleStreamInfo(MediaInfo mi, int i, MediaFileInfo parent) : base(mi, i, StreamKind.Text, parent)
         {
-            LineCount = MediaInfoReader.SafeGetLong(mi, StreamKind.Text, i, "ElementCount");
+            if (mi.Get(StreamKind.Text, i, "ElementCount") != "")
+                LineCount = MediaInfoReader.SafeGetLong(mi, StreamKind.Text, i, "ElementCount");
         }
 
         public bool IsRussianSignsByTitle => Language.Contains("Russian") && (Title.Contains("Sign") || Title.Contains("Надписи"));

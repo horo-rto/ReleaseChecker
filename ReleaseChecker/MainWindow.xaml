@@ -456,8 +456,7 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                    <TextBlock Text="; " Foreground="Gray"/>
-                    <TextBlock Text="{Binding LineCount, StringFormat={}{0} lines}">
+                    <TextBlock Text="{Binding LineCount, StringFormat={}; {0} lines}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="Gray"/>
@@ -465,6 +464,9 @@
                                     <DataTrigger Binding="{Binding LineCountWarning}" Value="True">
                                         <Setter Property="Foreground" Value="#FFAA00"/>
                                         <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding LineCount}" Value="-1">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
