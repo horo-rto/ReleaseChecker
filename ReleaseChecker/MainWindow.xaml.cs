@@ -1,6 +1,7 @@
 ﻿using MediaInfoLib;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Configuration;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -93,7 +94,7 @@ namespace ReleaseChecker
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.V)
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.C)
             {
                 if (Clipboard.ContainsFileDropList())
                 {
@@ -109,12 +110,27 @@ namespace ReleaseChecker
             }
         }
 
+        private void FilesDataGrid_CopyingRowClipboardContent(object sender, DataGridRowClipboardEventArgs e)
+        {
+            if (e.Item is FileRow fileRow)
+            {
+                e.ClipboardRowContent.Clear();
+                e.ClipboardRowContent.Add(new DataGridClipboardCellContent(
+                    e.Item,
+                    null,
+                    fileRow.ToString() + Environment.NewLine
+                ));
+            }
+        }
+
         private CancellationTokenSource? _cts;
 
         private async void ReadFilesAndUpdateUI(string[] paths)
         {
             try
             {
+                ErrorPanel.Visibility = Visibility.Collapsed;
+
                 Array.Sort(paths);
 
                 _cts?.Cancel();
@@ -193,6 +209,9 @@ namespace ReleaseChecker
                     total += Directory.EnumerateFiles(path, "*", options).Count(f => !ShouldSkip(f));
             }
 
+            if (total == 0)
+                return analyzed;
+
             progress.Report((0, total));
 
             int current = 0;
@@ -267,7 +286,8 @@ namespace ReleaseChecker
                 var fr = new FileRow()
                 {
                     FileName = entry.Rel,
-                    FolderPath = entry.Mfi.FolderPath
+                    FolderPath = entry.Mfi.FolderPath,
+                    Data = entry
                 };
                 var mfi = entry.Mfi;
 
@@ -320,6 +340,7 @@ namespace ReleaseChecker
     {
         public required string FileName { get; set; }
         public required string FolderPath { get; set; }
+        public required object Data { get; set; }
         public Dictionary<string, object?> Fields { get; } = new Dictionary<string, object?>();
         public object? this[string key]
         {
@@ -329,12 +350,24 @@ namespace ReleaseChecker
                 return string.Empty;
             }
         }
+
+        public override string ToString()
+        {
+            return string.Join(Environment.NewLine, Fields.Values.Where(x => x is ICell).Select(x => (x as ICell)?.ToClipboard()));
+        }
     }
 
-    public class FileNameCellInfo
+    public class FileNameCellInfo : ICell
     {
         public required string FileName { get; set; }
         public required string IntegrityText { get; set; }
         public IntegrityLevel IntegrityLevel { get; set; }
+        public string ToClipboard() => FileName + (IntegrityLevel != IntegrityLevel.Ok ? $" {IntegrityLevel} {IntegrityText}" : "");
     }
+
+    public interface ICell
+    {
+        public string ToClipboard();
+    }
+
 }

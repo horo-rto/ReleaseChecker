@@ -70,5 +70,7 @@ namespace ReleaseChecker
                     $"\n{Format}@{BitDepth}bit; {Width}x{Height}; {FrameRateToString}; {BitRateToString}";
             }
         }
+        public override string ToClipboard() => $"Video: {FormatToString}@{BitDepth}bit; {Resolution}; {FrameRateToString}; {BitRateToString} " +
+            (DelayMilliseconds > 0 ? $"; DELAY: {DelayMilliseconds} ms" : "");
     }
 }

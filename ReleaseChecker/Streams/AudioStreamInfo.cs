@@ -83,5 +83,8 @@ namespace ReleaseChecker
                     $"\n{Format}; {ChannelsToString}; {SamplingRate}; {BitRateToString}";
             }
         }
+        public override string ToClipboard() => $"Audio {Language} [{Title}]: {FormatToString}; {ChannelsToString}; {SamplingRate}; {BitRateToString}" + 
+            (DelayMilliseconds > 0 ? $"; DELAY: {DelayMilliseconds} ms" : "") +
+            (DurationError ? $"; DURATION DIFF: {DurationDiff} sec" : "");
     }
 }
