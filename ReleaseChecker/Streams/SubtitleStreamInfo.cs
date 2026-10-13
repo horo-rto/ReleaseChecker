@@ -24,6 +24,10 @@ namespace ReleaseChecker
             (Default == true && Index > 0);
 
         public bool SignsError { get; set; }
+
         public bool LineCountWarning { get; set; }
+
+        public override string ToClipboard() => $"Subtitle {Language} [{Title}]: {FormatToString}" +
+            (DelayMilliseconds > 0 ? $"; DELAY: {DelayMilliseconds} ms" : "");
     }
 }

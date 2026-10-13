@@ -541,7 +541,8 @@
                     AlternatingRowBackground="{DynamicResource AltSurfaceBrush}"
                     GridLinesVisibility="Horizontal"
                     HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
-                    VerticalGridLinesBrush="{DynamicResource GridLineBrush}">
+                    VerticalGridLinesBrush="{DynamicResource GridLineBrush}"
+                    CopyingRowClipboardContent="FilesDataGrid_CopyingRowClipboardContent">
 
             <DataGrid.CellStyle>
                 <Style TargetType="DataGridCell">

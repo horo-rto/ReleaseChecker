@@ -5,7 +5,7 @@ namespace ReleaseChecker
     /// <summary>
     /// https://github.com/MediaArea/MediaInfoLib/blob/c3f46906117560790247bda52da04e4d8fcef6c7/Source/MediaInfo/MediaInfo_Config_Automatic.cpp
     /// </summary>
-    public class MediaFileInfo
+    public class MediaFileInfo : ICell
     {
         public string FilePath { get; set; }
         public string FileName => System.IO.Path.GetFileName(FilePath);
@@ -169,6 +169,8 @@ namespace ReleaseChecker
 
             throw new ArgumentException($"Неверный тип: {typeof(T).Name}");
         }
+
+        public string ToClipboard() => $"{MenuInfoToString}";
     }
 
     public enum IntegrityLevel

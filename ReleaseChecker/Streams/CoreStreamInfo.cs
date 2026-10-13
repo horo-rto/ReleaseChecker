@@ -2,7 +2,7 @@ using MediaInfoLib;
 
 namespace ReleaseChecker
 {
-    public class CoreStreamInfo
+    public class CoreStreamInfo : ICell
     {
         public int Index { get; set; }
         public StreamKind StreamKind { get; set; }
@@ -66,6 +66,8 @@ namespace ReleaseChecker
         }
 
         public new string ToString() => $"{Index} {Language} {Title}";
+
+        public virtual string ToClipboard() => "Core";
 
         protected string NormalizeBitrate(string br)
         {

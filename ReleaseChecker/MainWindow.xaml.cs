@@ -109,12 +109,27 @@ namespace ReleaseChecker
             }
         }
 
+        private void FilesDataGrid_CopyingRowClipboardContent(object sender, DataGridRowClipboardEventArgs e)
+        {
+            if (e.Item is FileRow fileRow)
+            {
+                e.ClipboardRowContent.Clear();
+                e.ClipboardRowContent.Add(new DataGridClipboardCellContent(
+                    e.Item,
+                    null,
+                    fileRow.ToString() + Environment.NewLine
+                ));
+            }
+        }
+
         private CancellationTokenSource? _cts;
 
         private async void ReadFilesAndUpdateUI(string[] paths)
         {
             try
             {
+                ErrorPanel.Visibility = Visibility.Collapsed;
+
                 Array.Sort(paths);
 
                 _cts?.Cancel();
@@ -192,6 +207,9 @@ namespace ReleaseChecker
                 if (Directory.Exists(path))
                     total += Directory.EnumerateFiles(path, "*", options).Count(f => !ShouldSkip(f));
             }
+
+            if (total == 0)
+                return analyzed;
 
             progress.Report((0, total));
 
@@ -329,12 +347,24 @@ namespace ReleaseChecker
                 return string.Empty;
             }
         }
+
+        public override string ToString()
+        {
+            return string.Join(Environment.NewLine, Fields.Values.Where(x => x is ICell).Select(x => (x as ICell)?.ToClipboard()));
+        }
     }
 
-    public class FileNameCellInfo
+    public class FileNameCellInfo : ICell
     {
         public required string FileName { get; set; }
         public required string IntegrityText { get; set; }
         public IntegrityLevel IntegrityLevel { get; set; }
+        public string ToClipboard() => FileName + (IntegrityLevel != IntegrityLevel.Ok ? $" {IntegrityLevel} {IntegrityText}" : "");
     }
+
+    public interface ICell
+    {
+        public string ToClipboard();
+    }
+
 }
